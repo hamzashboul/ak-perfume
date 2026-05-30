@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import CartDrawer from "@/components/cart/CartDrawer";
+import { LangProvider } from "@/lib/i18n/LangContext";
 
 export const metadata: Metadata = {
   title: "AK Perfume | عطور أصيلة",
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body>
-        <Navbar />
-        <main>{children}</main>
-        <CartDrawer />
+        <LangProvider>
+          <Navbar />
+          <main>{children}</main>
+          <CartDrawer />
+        </LangProvider>
       </body>
     </html>
   );

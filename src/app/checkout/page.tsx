@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
+import { useLang } from '@/lib/i18n/LangContext';
+import { t } from '@/lib/i18n/translations';
 
 type PaymentMethod = 'card' | 'cod' | 'whatsapp' | 'instagram';
 
@@ -14,26 +16,25 @@ interface FormData {
   notes: string;
 }
 
-const cities = ['عمّان', 'إربد', 'الزرقاء', 'العقبة', 'السلط', 'مادبا', 'الكرك', 'جرش', 'عجلون', 'المفرق', 'الطفيلة', 'معان'];
+const citiesAr = ['عمّان', 'إربد', 'الزرقاء', 'العقبة', 'السلط', 'مادبا', 'الكرك', 'جرش', 'عجلون', 'المفرق', 'الطفيلة', 'معان'];
+const citiesEn = ['Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Salt', 'Madaba', 'Karak', 'Jerash', 'Ajloun', 'Mafraq', 'Tafilah', 'Maan'];
 
-// ─── Promo Codes ──────────────────────────────────────────────────────────────
-const PROMO_CODES: Record<string, { discount: number; type: 'percent' | 'fixed'; label: string }> = {
-  'AK10':    { discount: 10, type: 'percent', label: 'خصم ١٠٪' },
-  'WELCOME': { discount: 2,  type: 'fixed',   label: 'خصم ٢ دينار' },
-  'AK2025':  { discount: 15, type: 'percent', label: 'خصم ١٥٪' },
+const PROMO_CODES: Record<string, { discount: number; type: 'percent' | 'fixed'; labelAr: string; labelEn: string }> = {
+  'AK10':    { discount: 10, type: 'percent', labelAr: 'خصم ١٠٪',     labelEn: '10% Discount'   },
+  'WELCOME': { discount: 2,  type: 'fixed',   labelAr: 'خصم ٢ دينار', labelEn: '2 JD Discount'  },
+  'AK2025':  { discount: 15, type: 'percent', labelAr: 'خصم ١٥٪',     labelEn: '15% Discount'   },
 };
 
 export default function CheckoutPage() {
+  const { lang, isRTL } = useLang();
   const { items, totalPrice, totalItems, clearCart } = useCartStore();
-  const [mounted, setMounted]     = useState(false);
-  const [payment, setPayment]     = useState<PaymentMethod>('cod');
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [form, setForm]           = useState<FormData>({ name: '', phone: '', city: '', address: '', notes: '' });
-  const [errors, setErrors]       = useState<Partial<FormData>>({});
-
-  // Promo
-  const [promoInput, setPromoInput]   = useState('');
+  const [mounted, setMounted]       = useState(false);
+  const [payment, setPayment]       = useState<PaymentMethod>('cod');
+  const [submitted, setSubmitted]   = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [form, setForm]             = useState<FormData>({ name: '', phone: '', city: '', address: '', notes: '' });
+  const [errors, setErrors]         = useState<Partial<FormData>>({});
+  const [promoInput, setPromoInput] = useState('');
   const [promoApplied, setPromoApplied] = useState<typeof PROMO_CODES[string] | null>(null);
   const [promoError, setPromoError]   = useState('');
   const [promoSuccess, setPromoSuccess] = useState('');
@@ -43,41 +44,34 @@ export default function CheckoutPage() {
   const cartItems = mounted ? items : [];
   const subtotal  = mounted ? totalPrice() : 0;
   const count     = mounted ? totalItems() : 0;
+  const discount  = promoApplied ? (promoApplied.type === 'percent' ? (subtotal * promoApplied.discount) / 100 : promoApplied.discount) : 0;
+  const total     = Math.max(0, subtotal - discount);
 
-  const discount = promoApplied
-    ? promoApplied.type === 'percent'
-      ? (subtotal * promoApplied.discount) / 100
-      : promoApplied.discount
-    : 0;
-  const total = Math.max(0, subtotal - discount);
+  const cities = lang === 'ar' ? citiesAr : citiesEn;
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
-    if (!code) { setPromoError('أدخل الكود أولاً'); return; }
+    if (!code) { setPromoError(lang === 'ar' ? 'أدخل الكود أولاً' : 'Enter a code first'); return; }
     if (PROMO_CODES[code]) {
       setPromoApplied(PROMO_CODES[code]);
-      setPromoSuccess(`✓ تم تطبيق ${PROMO_CODES[code].label}`);
+      const label = lang === 'ar' ? PROMO_CODES[code].labelAr : PROMO_CODES[code].labelEn;
+      setPromoSuccess(`✓ ${label}`);
       setPromoError('');
     } else {
-      setPromoError('الكود غير صحيح');
+      setPromoError(t.checkout.promoErr[lang]);
       setPromoSuccess('');
       setPromoApplied(null);
     }
   };
 
-  const removePromo = () => {
-    setPromoApplied(null);
-    setPromoInput('');
-    setPromoSuccess('');
-    setPromoError('');
-  };
+  const removePromo = () => { setPromoApplied(null); setPromoInput(''); setPromoSuccess(''); setPromoError(''); };
 
   const validate = () => {
     const e: Partial<FormData> = {};
-    if (!form.name.trim())    e.name    = 'الاسم مطلوب';
-    if (!form.phone.trim())   e.phone   = 'رقم الهاتف مطلوب';
-    if (!form.city)           e.city    = 'المدينة مطلوبة';
-    if (!form.address.trim()) e.address = 'العنوان مطلوب';
+    if (!form.name.trim())    e.name    = t.checkout.nameErr[lang];
+    if (!form.phone.trim())   e.phone   = t.checkout.phoneErr[lang];
+    if (!form.city)           e.city    = t.checkout.cityErr[lang];
+    if (!form.address.trim()) e.address = t.checkout.addressErr[lang];
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -87,8 +81,10 @@ export default function CheckoutPage() {
     setLoading(true);
     await new Promise(r => setTimeout(r, 1200));
     if (payment === 'whatsapp') {
-      const promoLine = promoApplied ? `\nكود الخصم: ${promoInput.toUpperCase()} (${promoApplied.label})` : '';
-      const msg = `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`;
+      const promoLine = promoApplied ? `\n${lang === 'ar' ? 'كود الخصم' : 'Promo Code'}: ${promoInput.toUpperCase()}` : '';
+      const msg = lang === 'ar'
+        ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
+        : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
       window.open(`https://wa.me/962000000000?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (payment === 'instagram') {
       window.open('https://instagram.com/akperfume', '_blank');
@@ -98,42 +94,46 @@ export default function CheckoutPage() {
     clearCart();
   };
 
-  if (submitted) {
-    return (
-      <div dir="rtl" style={{ minHeight: '100vh', background: '#F8F6F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '1.5rem' }}>✦</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 300, color: '#0A0A0A', marginBottom: '12px' }}>شكراً لطلبك!</h1>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', fontWeight: 300, color: 'rgba(10,10,10,0.5)', marginBottom: '32px', lineHeight: 1.8 }}>تم استلام طلبك بنجاح.<br />سنتواصل معك قريباً للتأكيد.</p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/products" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', padding: '13px 28px', borderRadius: '1px', textDecoration: 'none' }}>تسوق أكثر</Link>
-            <Link href="/" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: 'transparent', color: '#0A0A0A', padding: '12px 28px', borderRadius: '1px', border: '0.5px solid rgba(10,10,10,0.2)', textDecoration: 'none' }}>الرئيسية</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (mounted && count === 0) {
-    return (
-      <div dir="rtl" style={{ minHeight: '100vh', background: '#F8F6F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.75rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)', marginBottom: '20px' }}>السلة فارغة</p>
-          <Link href="/products" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', padding: '13px 28px', borderRadius: '1px', textDecoration: 'none' }}>تصفح المجموعة</Link>
-        </div>
-      </div>
-    );
-  }
-
   const labelStyle: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.45)', display: 'block', marginBottom: '6px' };
+  const inputBase: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none' };
+
+  if (submitted) return (
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', background: '#F8F6F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '1.5rem' }}>✦</div>
+        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 300, color: '#0A0A0A', marginBottom: '12px' }}>{t.checkout.successTitle[lang]}</h1>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', fontWeight: 300, color: 'rgba(10,10,10,0.5)', marginBottom: '32px', lineHeight: 1.8 }}>{t.checkout.successBody[lang]}</p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/products" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', padding: '13px 28px', borderRadius: '1px', textDecoration: 'none' }}>{t.checkout.shopMore[lang]}</Link>
+          <Link href="/" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: 'transparent', color: '#0A0A0A', padding: '12px 28px', borderRadius: '1px', border: '0.5px solid rgba(10,10,10,0.2)', textDecoration: 'none' }}>{t.checkout.backHome[lang]}</Link>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (mounted && count === 0) return (
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', background: '#F8F6F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.75rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)', marginBottom: '20px' }}>{t.checkout.emptyCart[lang]}</p>
+        <Link href="/products" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', padding: '13px 28px', borderRadius: '1px', textDecoration: 'none' }}>{t.checkout.browseColl[lang]}</Link>
+      </div>
+    </div>
+  );
+
+  const paymentMethods = [
+    { id: 'cod',       icon: '💵', title: t.checkout.codTitle[lang], desc: t.checkout.codDesc[lang]  },
+    { id: 'card',      icon: '💳', title: t.checkout.cardTitle[lang],desc: t.checkout.cardDesc[lang] },
+    { id: 'whatsapp',  icon: '💬', title: t.checkout.waTitle[lang],  desc: t.checkout.waDesc[lang]   },
+    { id: 'instagram', icon: '📷', title: t.checkout.igTitle[lang],  desc: t.checkout.igDesc[lang]   },
+  ] as { id: PaymentMethod; icon: string; title: string; desc: string }[];
 
   return (
-    <div dir="rtl" style={{ background: '#F8F6F2', minHeight: '100vh' }}>
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ background: '#F8F6F2', minHeight: '100vh' }}>
 
       <div style={{ background: '#0A0A0A', paddingBlock: 'clamp(2rem,4vw,3.5rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(201,169,110,0.07) 0%, transparent 70%)', pointerEvents: 'none' }}/>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8A6F3E', marginBottom: '8px' }}>آخر خطوة</p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 300, letterSpacing: '-0.03em', color: '#F8F6F2' }}>إتمام الطلب</h1>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8A6F3E', marginBottom: '8px' }}>{t.checkout.eyebrow[lang]}</p>
+        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 300, letterSpacing: '-0.03em', color: '#F8F6F2' }}>{t.checkout.title[lang]}</h1>
       </div>
 
       <div className="site-container" style={{ paddingBlock: 'clamp(2rem,5vw,4rem)' }}>
@@ -143,43 +143,48 @@ export default function CheckoutPage() {
 
             {/* Delivery */}
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>معلومات التوصيل</h2>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.delivery[lang]}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>الاسم الكامل *</label>
-                  <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }} placeholder="الاسم الكامل"
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', border: `0.5px solid ${errors.name ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none' }}
+                  <label style={labelStyle}>{t.checkout.name[lang]} *</label>
+                  <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }} placeholder={t.checkout.namePh[lang]}
+                    style={{ ...inputBase, border: `0.5px solid ${errors.name ? '#E53E3E' : 'rgba(10,10,10,0.12)'}` }}
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.name ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.name && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.name}</p>}
                 </div>
+
                 <div>
-                  <label style={labelStyle}>رقم الهاتف *</label>
+                  <label style={labelStyle}>{t.checkout.phone[lang]} *</label>
                   <input value={form.phone} onChange={e => { setForm(f => ({ ...f, phone: e.target.value })); setErrors(er => ({ ...er, phone: '' })); }} placeholder="07xxxxxxxx" type="tel"
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', border: `0.5px solid ${errors.phone ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none' }}
+                    style={{ ...inputBase, border: `0.5px solid ${errors.phone ? '#E53E3E' : 'rgba(10,10,10,0.12)'}` }}
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.phone ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.phone && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.phone}</p>}
                 </div>
+
                 <div>
-                  <label style={labelStyle}>المدينة *</label>
+                  <label style={labelStyle}>{t.checkout.city[lang]} *</label>
                   <select value={form.city} onChange={e => { setForm(f => ({ ...f, city: e.target.value })); setErrors(er => ({ ...er, city: '' })); }}
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', border: `0.5px solid ${errors.city ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                    style={{ ...inputBase, border: `0.5px solid ${errors.city ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, cursor: 'pointer' }}
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.city ? '#E53E3E' : 'rgba(10,10,10,0.12)')}>
-                    <option value="">اختر المدينة</option>
+                    <option value="">{t.checkout.cityPh[lang]}</option>
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {errors.city && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.city}</p>}
                 </div>
+
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>العنوان التفصيلي *</label>
-                  <input value={form.address} onChange={e => { setForm(f => ({ ...f, address: e.target.value })); setErrors(er => ({ ...er, address: '' })); }} placeholder="الحي، الشارع، رقم المبنى"
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', border: `0.5px solid ${errors.address ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none' }}
+                  <label style={labelStyle}>{t.checkout.address[lang]} *</label>
+                  <input value={form.address} onChange={e => { setForm(f => ({ ...f, address: e.target.value })); setErrors(er => ({ ...er, address: '' })); }} placeholder={t.checkout.addressPh[lang]}
+                    style={{ ...inputBase, border: `0.5px solid ${errors.address ? '#E53E3E' : 'rgba(10,10,10,0.12)'}` }}
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.address ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.address && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.address}</p>}
                 </div>
+
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>ملاحظات (اختياري)</label>
-                  <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="أي تعليمات خاصة للتوصيل..." rows={3}
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#0A0A0A', background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.12)', borderRadius: '2px', padding: '11px 14px', width: '100%', outline: 'none', resize: 'none' }}
+                  <label style={labelStyle}>{t.checkout.notes[lang]}</label>
+                  <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder={t.checkout.notesPh[lang]} rows={3}
+                    style={{ ...inputBase, border: '0.5px solid rgba(10,10,10,0.12)', resize: 'none' }}
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = 'rgba(10,10,10,0.12)')}/>
                 </div>
               </div>
@@ -187,16 +192,11 @@ export default function CheckoutPage() {
 
             {/* Payment */}
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>طريقة الدفع</h2>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.payment[lang]}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {([
-                  { id: 'cod',       icon: '💵', title: 'الدفع عند الاستلام', desc: 'ادفع نقداً عند استلام طلبك' },
-                  { id: 'card',      icon: '💳', title: 'بطاقة بنكية',        desc: 'Visa / Mastercard — قريباً' },
-                  { id: 'whatsapp',  icon: '💬', title: 'طلب عبر واتساب',    desc: 'سنتواصل معك لتأكيد الطلب'  },
-                  { id: 'instagram', icon: '📷', title: 'طلب عبر إنستقرام',  desc: 'راسلنا على @akperfume'     },
-                ] as { id: PaymentMethod; icon: string; title: string; desc: string }[]).map(m => (
+                {paymentMethods.map(m => (
                   <button key={m.id} onClick={() => m.id !== 'card' && setPayment(m.id)} disabled={m.id === 'card'}
-                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderRadius: '3px', cursor: m.id === 'card' ? 'not-allowed' : 'pointer', background: payment === m.id ? 'rgba(201,169,110,0.06)' : '#F8F6F2', border: `${payment === m.id ? '1px' : '0.5px'} solid ${payment === m.id ? 'rgba(201,169,110,0.4)' : 'rgba(10,10,10,0.08)'}`, opacity: m.id === 'card' ? 0.5 : 1, transition: 'all 200ms', textAlign: 'right' as const, width: '100%' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderRadius: '3px', cursor: m.id === 'card' ? 'not-allowed' : 'pointer', background: payment === m.id ? 'rgba(201,169,110,0.06)' : '#F8F6F2', border: `${payment === m.id ? '1px' : '0.5px'} solid ${payment === m.id ? 'rgba(201,169,110,0.4)' : 'rgba(10,10,10,0.08)'}`, opacity: m.id === 'card' ? 0.5 : 1, transition: 'all 200ms', textAlign: isRTL ? 'right' as const : 'left' as const, width: '100%' }}>
                     <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>{m.icon}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: '#0A0A0A' }}>{m.title}</div>
@@ -212,9 +212,8 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div style={{ position: 'sticky', top: 'calc(var(--nav-h) + 2rem)' }}>
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>ملخص الطلب</h2>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.summary[lang]}</h2>
 
-              {/* Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                 {cartItems.map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
@@ -227,7 +226,9 @@ export default function CheckoutPage() {
                         </svg>
                       </div>
                       <div>
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', fontWeight: 400, color: '#0A0A0A' }}>{item.name}</div>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', fontWeight: 400, color: '#0A0A0A' }}>
+                          {lang === 'ar' ? item.name : item.nameEn}
+                        </div>
                         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', color: 'rgba(10,10,10,0.35)' }}>× {item.quantity}</div>
                       </div>
                     </div>
@@ -236,70 +237,61 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* ── Promo Code ── */}
+              {/* Promo */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={labelStyle}>كود الخصم</label>
+                <label style={labelStyle}>{t.checkout.promoLabel[lang]}</label>
                 {promoApplied ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(201,169,110,0.06)', border: '1px solid rgba(201,169,110,0.3)', borderRadius: '2px', padding: '10px 14px' }}>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', fontWeight: 500, color: '#8A6F3E' }}>{promoSuccess}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', fontWeight: 500, color: '#8A6F3E' }}>✓ {promoSuccess}</span>
                     <button onClick={removePromo} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)', fontSize: '0.75rem', padding: '0 4px' }}>✕</button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      value={promoInput}
-                      onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
-                      onKeyDown={e => e.key === 'Enter' && applyPromo()}
-                      placeholder="AK10"
+                    <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()} placeholder="AK10"
                       style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#0A0A0A', background: '#F8F6F2', border: `0.5px solid ${promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '9px 12px', flex: 1, outline: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-                      onFocus={e => (e.target.style.borderColor = '#C9A96E')}
-                      onBlur={e => (e.target.style.borderColor = promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)')}
-                    />
-                    <button onClick={applyPromo}
-                      style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 200ms' }}>
-                      تطبيق
+                      onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
+                    <button onClick={applyPromo} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      {t.checkout.promoApply[lang]}
                     </button>
                   </div>
                 )}
                 {promoError && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{promoError}</p>}
               </div>
 
-              {/* Divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <div style={{ flex: 1, height: '0.5px', background: 'rgba(10,10,10,0.06)' }}/>
                 <div style={{ width: '4px', height: '4px', background: '#C9A96E', transform: 'rotate(45deg)' }}/>
                 <div style={{ flex: 1, height: '0.5px', background: 'rgba(10,10,10,0.06)' }}/>
               </div>
 
-              {/* Totals */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>المجموع الفرعي</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>{t.checkout.subtotal[lang]}</span>
                   <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#0A0A0A' }}>{subtotal.toFixed(2)} JD</span>
                 </div>
                 {promoApplied && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46' }}>الخصم ({promoApplied.label})</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46' }}>{t.checkout.discount[lang]}</span>
                     <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46', fontWeight: 500 }}>- {discount.toFixed(2)} JD</span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>التوصيل</span>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46', fontWeight: 500 }}>مجاني</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>{t.checkout.shipping[lang]}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46', fontWeight: 500 }}>{t.checkout.free[lang]}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '0.5px solid rgba(10,10,10,0.06)' }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 400, color: '#0A0A0A' }}>الإجمالي</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 400, color: '#0A0A0A' }}>{t.checkout.grandTotal[lang]}</span>
                   <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 500, color: '#8A6F3E' }}>{total.toFixed(2)} JD</span>
                 </div>
               </div>
 
               <button onClick={handleSubmit} disabled={loading}
                 style={{ width: '100%', padding: '14px', background: loading ? 'rgba(10,10,10,0.6)' : '#0A0A0A', color: '#F8F6F2', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', border: 'none', borderRadius: '1px', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 300ms', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                {loading ? 'جاري الإرسال...' : payment === 'whatsapp' ? 'إرسال عبر واتساب' : payment === 'instagram' ? 'التواصل عبر إنستقرام' : 'تأكيد الطلب'}
+                {loading ? t.checkout.sending[lang] : payment === 'whatsapp' ? t.checkout.sendWa[lang] : payment === 'instagram' ? t.checkout.sendIg[lang] : t.checkout.confirmBtn[lang]}
               </button>
 
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 300, color: 'rgba(10,10,10,0.35)', textAlign: 'center', lineHeight: 1.6 }}>
-                بالضغط على تأكيد الطلب، أنت توافق على شروط الاستخدام
+                {t.checkout.terms[lang]}
               </p>
             </div>
           </div>
