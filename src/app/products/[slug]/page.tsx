@@ -1,37 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useLang } from '@/lib/i18n/LangContext';
 import { t } from '@/lib/i18n/translations';
-
-const allProducts = [
-  { id: 1,  slug: 'oud-al-muluk',      name: 'عود الملوك',     nameEn: 'Oud Al Muluk',      type: 'oriental', typeLabel: 'Oriental · Woody',   price: 12.99, inspired: 'Inspired by Baccarat Rouge 540',  badge: 'premium',    ml: 50,  topNotes: ['زعفران', 'جهة'], heartNotes: ['عود', 'أرز'], baseNotes: ['مسك', 'أمبر'],    desc: 'عطر شرقي فاخر يجمع بين دفء العود وعمق الزعفران، مستوحى من أشهر عطور العالم.', descEn: 'A luxurious oriental fragrance combining the warmth of oud and the depth of saffron, inspired by the world\'s most iconic scents.' },
-  { id: 2,  slug: 'zahr-al-yasmin',    name: 'زهر الياسمين',  nameEn: 'Zahr Al Yasmin',    type: 'floral',   typeLabel: 'Floral · Fresh',     price: 14.99, inspired: 'Inspired by La Vie Est Belle',    badge: 'bestseller', ml: 50,  topNotes: ['كمثرى', 'كشمش'], heartNotes: ['آيريس', 'ياسمين'], baseNotes: ['بتشولي', 'فانيليا'], desc: 'عطر زهري رقيق يحتفي بجمال الياسمين وعذوبة الكمثرى في توليفة راقية ومميزة.', descEn: 'A delicate floral fragrance celebrating the beauty of jasmine and the sweetness of pear in an elegant, unique composition.' },
-  { id: 3,  slug: 'musk-al-layl',      name: 'مسك الليل',     nameEn: 'Musk Al Layl',      type: 'woody',    typeLabel: 'Woody · Amber',      price: 11.99, inspired: 'Inspired by Bleu de Chanel',     badge: '',           ml: 50,  topNotes: ['ليمون', 'نعناع'], heartNotes: ['زنجبيل', 'جوزة'], baseNotes: ['أرز', 'صندل'],    desc: 'عطر خشبي عصري يمزج بين النضارة والعمق في تجربة شمية فريدة لا تُنسى.', descEn: 'A modern woody fragrance blending freshness and depth for an unforgettable olfactory experience.' },
-  { id: 4,  slug: 'ghaith-al-sahra',   name: 'غيث الصحراء',   nameEn: 'Ghaith Al Sahra',   type: 'fresh',    typeLabel: 'Fresh · Citrus',     price: 13.99, inspired: 'Inspired by Aventus',             badge: '',           ml: 50,  topNotes: ['أناناس', 'برغموت'], heartNotes: ['بتولا', 'ياسمين'], baseNotes: ['مسك', 'عنبر'],   desc: 'عطر منعش وجريء يأخذك في رحلة عبر الصحراء بعد المطر، طازج وقوي.', descEn: 'A fresh, bold fragrance that takes you on a journey through the desert after rain — fresh and powerful.' },
-  { id: 5,  slug: 'layla',             name: 'ليلى',           nameEn: 'Layla',             type: 'floral',   typeLabel: 'Floral · Oriental',  price: 15.99, inspired: 'Inspired by Black Opium',         badge: 'new',        ml: 100, topNotes: ['قهوة', 'برتقال'], heartNotes: ['ياسمين', 'فانيليا'], baseNotes: ['خشب', 'مسك'],   desc: 'عطر شرقي زهري دافئ بلمسة قهوة ساحرة تجعله لا يُقاوم في ليالي الشتاء.', descEn: 'A warm floral oriental fragrance with an enchanting coffee touch, irresistible on winter nights.' },
-  { id: 6,  slug: 'amber-al-sharq',    name: 'أمبر الشرق',    nameEn: 'Amber Al Sharq',    type: 'oriental', typeLabel: 'Oriental · Amber',   price: 16.99, inspired: 'Inspired by Ambre Nuit',          badge: '',           ml: 100, topNotes: ['توت', 'برغموت'], heartNotes: ['أمبر', 'عود'],   baseNotes: ['مسك', 'صندل'],    desc: 'عطر أمبر شرقي فاخر مستوحى من ليالي الشرق، يجمع بين الدفء والأناقة.', descEn: 'A luxurious oriental amber fragrance inspired by Eastern nights, combining warmth and elegance.' },
-  { id: 7,  slug: 'sihr-al-bahr',      name: 'سحر البحر',     nameEn: 'Sihr Al Bahr',      type: 'fresh',    typeLabel: 'Fresh · Marine',     price: 10.99, inspired: 'Inspired by Acqua di Gio',        badge: '',           ml: 50,  topNotes: ['بحر', 'ليمون'],  heartNotes: ['نعناع', 'إكليل'], baseNotes: ['مسك', 'خشب'],    desc: 'عطر بحري منعش يحاكي نسيم البحر الأبيض المتوسط بنقائه ووضوحه المطلق.', descEn: 'A fresh marine fragrance that evokes the Mediterranean breeze with pure clarity.' },
-  { id: 8,  slug: 'wardat-dimashq',    name: 'وردة دمشق',     nameEn: 'Wardat Dimashq',    type: 'floral',   typeLabel: 'Floral · Rose',      price: 17.99, inspired: 'Inspired by Miss Dior',           badge: 'bestseller', ml: 100, topNotes: ['برغموت', 'ليمون'], heartNotes: ['وردة', 'فاوانيا'], baseNotes: ['مسك أبيض', 'خشب'], desc: 'عطر وردي رقيق يجسد جمال وردة دمشق الشهيرة في توليفة أنثوية راقية.', descEn: 'A delicate rose fragrance embodying the beauty of the famous Damascus rose in an elegant, feminine composition.' },
-  { id: 9,  slug: 'thelal-al-sandal',  name: 'ظلال الصندل',   nameEn: 'Thelal Al Sandal',  type: 'woody',    typeLabel: 'Woody · Sandalwood', price: 13.99, inspired: 'Inspired by Tam Dao',             badge: '',           ml: 50,  topNotes: ['فلفل', 'برغموت'], heartNotes: ['صندل', 'عرعر'], baseNotes: ['مسك', 'كريمة'],   desc: 'عطر خشبي هادئ مبني على قلب الصندل الأملس، يمنحك شعوراً بالهدوء والتوازن.', descEn: 'A calm woody fragrance built on a smooth sandalwood heart, giving you a sense of peace and balance.' },
-  { id: 10, slug: 'nabdat-al-lemon',   name: 'نبضات الليمون', nameEn: 'Nabdat Al Lemon',   type: 'fresh',    typeLabel: 'Fresh · Citrus',     price: 9.99,  inspired: 'Inspired by Acqua di Parma',      badge: '',           ml: 50,  topNotes: ['ليمون', 'برتقال'], heartNotes: ['إكليل', 'فلفل'], baseNotes: ['خشب', 'مسك'],    desc: 'عطر حمضي حيوي يشعل طاقتك ويمنحك انتعاشاً دائماً، مثالي للاستخدام اليومي.', descEn: 'A vibrant citrus fragrance that energizes you and keeps you refreshed — perfect for daily use.' },
-  { id: 11, slug: 'fajr-al-musk',      name: 'فجر المسك',     nameEn: 'Fajr Al Musk',      type: 'oriental', typeLabel: 'Oriental · Musk',    price: 14.99, inspired: 'Inspired by Musk Tahara',         badge: '',           ml: 100, topNotes: ['مسك أبيض', 'ورد'], heartNotes: ['عود', 'فانيليا'], baseNotes: ['أمبر', 'صندل'],  desc: 'عطر مسكي شرقي نقي يفوح بعطر الفجر وبياض الصباح، رقيق وعميق في آنٍ واحد.', descEn: 'A pure oriental musk fragrance that evokes the scent of dawn and the whiteness of morning — delicate yet deep.' },
-  { id: 12, slug: 'asrar-al-oud',      name: 'أسرار العود',   nameEn: 'Asrar Al Oud',      type: 'oriental', typeLabel: 'Oriental · Oud',     price: 19.99, inspired: 'Inspired by Oud Wood TF',         badge: 'premium',    ml: 100, topNotes: ['فلفل', 'زعفران'], heartNotes: ['عود', 'صندل'],   baseNotes: ['أمبر', 'تبغ'],    desc: 'تحفة عطرية فاخرة تجسد عراقة العود في أرقى صوره، للمقتنين الحقيقيين.', descEn: 'A masterpiece of luxury fragrance embodying the heritage of oud in its finest form — for true connoisseurs.' },
-];
+import { getProductBySlug, getRelatedProducts } from '@/lib/supabase/queries';
+import type { Product } from '@/lib/supabase/types';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { lang, isRTL } = useLang();
   const slug = params.slug as string;
-  const product = allProducts.find(p => p.slug === slug);
 
+  const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeNote, setActiveNote] = useState<'top' | 'heart' | 'base'>('top');
   const { addItem, openCart } = useCartStore();
+
+  useEffect(() => {
+    setLoading(true);
+    getProductBySlug(slug).then(async (data) => {
+      setProduct(data);
+      if (data) {
+        const rel = await getRelatedProducts(data.type, data.id);
+        setRelated(rel);
+      }
+      setLoading(false);
+    });
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)' }}>...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -48,13 +57,18 @@ export default function ProductDetailPage() {
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) {
-      addItem({ id: product.id, name: product.name, nameEn: product.nameEn, price: product.price, type: product.typeLabel, inspired: product.inspired });
+      addItem({
+        id: product.id as unknown as number,
+        name: product.name_ar,
+        nameEn: product.name_en,
+        price: product.price,
+        type: product.type_label,
+        inspired: product.inspired || '',
+      });
     }
     setAdded(true);
     setTimeout(() => { setAdded(false); openCart(); }, 800);
   };
-
-  const related = allProducts.filter(p => p.type === product.type && p.id !== product.id).slice(0, 3);
 
   const getBadgeLabel = () => {
     if (product.badge === 'bestseller') return t.products.bestseller[lang];
@@ -62,6 +76,8 @@ export default function ProductDetailPage() {
     if (product.badge === 'premium') return t.products.premium[lang];
     return '';
   };
+
+  const currentNotes = activeNote === 'top' ? product.top_notes : activeNote === 'heart' ? product.heart_notes : product.base_notes;
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} style={{ background: '#F8F6F2', minHeight: '100vh' }}>
@@ -72,7 +88,7 @@ export default function ProductDetailPage() {
           {[
             { href: '/',         label: t.detail.home[lang]        },
             { href: '/products', label: t.detail.collections[lang] },
-            { href: '#',         label: lang === 'ar' ? product.name : product.nameEn },
+            { href: '#',         label: lang === 'ar' ? product.name_ar : product.name_en },
           ].map((b, i, arr) => (
             <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Link href={b.href} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 400, letterSpacing: '0.1em', color: i === arr.length - 1 ? '#0A0A0A' : 'rgba(10,10,10,0.35)', textDecoration: 'none' }}>{b.label}</Link>
@@ -89,16 +105,22 @@ export default function ProductDetailPage() {
           {/* Image */}
           <div style={{ position: 'sticky', top: 'calc(var(--nav-h) + 2rem)' }}>
             <div style={{ background: '#0A0A0A', borderRadius: '4px', aspectRatio: '3/4', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', boxShadow: '0 32px 80px rgba(10,10,10,0.15)' }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(201,169,110,0.08) 0%, transparent 70%)' }}/>
-              <svg width="100" height="200" viewBox="0 0 100 200" fill="none" style={{ animation: 'float 5s ease-in-out infinite', position: 'relative', zIndex: 1 }}>
-                <rect x="25" y="50" width="50" height="135" rx="25" fill="#C9A96E" opacity="0.15"/>
-                <rect x="28" y="53" width="44" height="129" rx="22" fill="#C9A96E" opacity="0.3"/>
-                <rect x="35" y="22" width="30" height="32" rx="5" fill="#1C1C1C"/>
-                <ellipse cx="50" cy="21" rx="18" ry="18" fill="#141414"/>
-                <ellipse cx="50" cy="21" rx="12" ry="12" fill="#0A0A0A"/>
-                <rect x="32" y="105" width="36" height="0.5" fill="#C9A96E" opacity="0.4"/>
-                <text x="50" y="140" textAnchor="middle" fill="#C9A96E" fontSize="10" fontFamily="DM Sans" opacity="0.5" letterSpacing="4">AK</text>
-              </svg>
+              {product.image_url ? (
+                <img src={product.image_url} alt={product.name_ar} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 1 }}/>
+              ) : (
+                <>
+                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(201,169,110,0.08) 0%, transparent 70%)' }}/>
+                  <svg width="100" height="200" viewBox="0 0 100 200" fill="none" style={{ animation: 'float 5s ease-in-out infinite', position: 'relative', zIndex: 1 }}>
+                    <rect x="25" y="50" width="50" height="135" rx="25" fill="#C9A96E" opacity="0.15"/>
+                    <rect x="28" y="53" width="44" height="129" rx="22" fill="#C9A96E" opacity="0.3"/>
+                    <rect x="35" y="22" width="30" height="32" rx="5" fill="#1C1C1C"/>
+                    <ellipse cx="50" cy="21" rx="18" ry="18" fill="#141414"/>
+                    <ellipse cx="50" cy="21" rx="12" ry="12" fill="#0A0A0A"/>
+                    <rect x="32" y="105" width="36" height="0.5" fill="#C9A96E" opacity="0.4"/>
+                    <text x="50" y="140" textAnchor="middle" fill="#C9A96E" fontSize="10" fontFamily="DM Sans" opacity="0.5" letterSpacing="4">AK</text>
+                  </svg>
+                </>
+              )}
               <div style={{ position: 'absolute', top: '16px', right: '16px', width: '20px', height: '20px', borderTop: '1px solid rgba(201,169,110,0.4)', borderRight: '1px solid rgba(201,169,110,0.4)' }}/>
               <div style={{ position: 'absolute', bottom: '16px', left: '16px', width: '20px', height: '20px', borderBottom: '1px solid rgba(201,169,110,0.4)', borderLeft: '1px solid rgba(201,169,110,0.4)' }}/>
               {product.badge && (
@@ -111,12 +133,12 @@ export default function ProductDetailPage() {
 
           {/* Info */}
           <div>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8A6F3E', marginBottom: '8px' }}>{product.typeLabel}</p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8A6F3E', marginBottom: '8px' }}>{product.type_label}</p>
             <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 300, letterSpacing: '-0.025em', color: '#0A0A0A', lineHeight: 1, marginBottom: '6px' }}>
-              {lang === 'ar' ? product.name : product.nameEn}
+              {lang === 'ar' ? product.name_ar : product.name_en}
             </h1>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)', marginBottom: '20px' }}>
-              {lang === 'ar' ? product.nameEn : product.name} · {product.ml}ml
+              {lang === 'ar' ? product.name_en : product.name_ar} · {product.ml}ml
             </p>
             <div style={{ width: '36px', height: '0.5px', background: 'linear-gradient(90deg, #C9A96E, transparent)', marginBottom: '20px' }}/>
 
@@ -128,33 +150,37 @@ export default function ProductDetailPage() {
 
             {/* Description */}
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', fontWeight: 300, color: 'rgba(10,10,10,0.55)', lineHeight: 1.8, marginBottom: '28px' }}>
-              {lang === 'ar' ? product.desc : product.descEn}
+              {lang === 'ar' ? product.desc_ar : product.desc_en}
             </p>
 
             {/* Inspired by */}
-            <div style={{ background: '#F0EDE8', borderRadius: '3px', padding: '12px 16px', marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ color: '#C9A96E', fontSize: '0.75rem' }}>✦</span>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 300, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.04em' }}>{product.inspired}</span>
-            </div>
+            {product.inspired && (
+              <div style={{ background: '#F0EDE8', borderRadius: '3px', padding: '12px 16px', marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: '#C9A96E', fontSize: '0.75rem' }}>✦</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 300, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.04em' }}>{product.inspired}</span>
+              </div>
+            )}
 
             {/* Scent Notes */}
-            <div style={{ marginBottom: '28px' }}>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '12px' }}>
-                {t.detail.scentNotes[lang]}
-              </p>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-                {(['top', 'heart', 'base'] as const).map(note => (
-                  <button key={note} onClick={() => setActiveNote(note)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', background: activeNote === note ? '#0A0A0A' : 'transparent', color: activeNote === note ? '#F8F6F2' : 'rgba(10,10,10,0.4)', border: '0.5px solid', borderColor: activeNote === note ? '#0A0A0A' : 'rgba(10,10,10,0.12)', borderRadius: '1px', padding: '6px 14px', cursor: 'pointer', transition: 'all 200ms' }}>
-                    {note === 'top' ? t.detail.topNotes[lang] : note === 'heart' ? t.detail.heartNotes[lang] : t.detail.baseNotes[lang]}
-                  </button>
-                ))}
+            {(product.top_notes?.length > 0 || product.heart_notes?.length > 0 || product.base_notes?.length > 0) && (
+              <div style={{ marginBottom: '28px' }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '12px' }}>
+                  {t.detail.scentNotes[lang]}
+                </p>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                  {(['top', 'heart', 'base'] as const).map(note => (
+                    <button key={note} onClick={() => setActiveNote(note)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', background: activeNote === note ? '#0A0A0A' : 'transparent', color: activeNote === note ? '#F8F6F2' : 'rgba(10,10,10,0.4)', border: '0.5px solid', borderColor: activeNote === note ? '#0A0A0A' : 'rgba(10,10,10,0.12)', borderRadius: '1px', padding: '6px 14px', cursor: 'pointer', transition: 'all 200ms' }}>
+                      {note === 'top' ? t.detail.topNotes[lang] : note === 'heart' ? t.detail.heartNotes[lang] : t.detail.baseNotes[lang]}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {currentNotes?.map(note => (
+                    <span key={note} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 400, background: 'rgba(201,169,110,0.1)', color: '#8A6F3E', border: '0.5px solid rgba(201,169,110,0.25)', borderRadius: '1px', padding: '5px 12px' }}>{note}</span>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {(activeNote === 'top' ? product.topNotes : activeNote === 'heart' ? product.heartNotes : product.baseNotes).map(note => (
-                  <span key={note} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 400, background: 'rgba(201,169,110,0.1)', color: '#8A6F3E', border: '0.5px solid rgba(201,169,110,0.25)', borderRadius: '1px', padding: '5px 12px' }}>{note}</span>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Quantity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -174,7 +200,7 @@ export default function ProductDetailPage() {
             </button>
 
             {/* WhatsApp */}
-            <a href={`https://wa.me/962000000000?text=${encodeURIComponent(`${lang === 'ar' ? 'مرحبا، أريد طلب' : 'Hello, I want to order'}: ${lang === 'ar' ? product.name : product.nameEn} × ${qty} — ${(product.price * qty).toFixed(2)} JD`)}`}
+            <a href={`https://wa.me/962000000000?text=${encodeURIComponent(`${lang === 'ar' ? 'مرحبا، أريد طلب' : 'Hello, I want to order'}: ${lang === 'ar' ? product.name_ar : product.name_en} × ${qty} — ${(product.price * qty).toFixed(2)} JD`)}`}
               target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '13px', background: 'transparent', color: 'rgba(10,10,10,0.5)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', textDecoration: 'none', border: '0.5px solid rgba(10,10,10,0.15)', borderRadius: '1px' }}>
               {t.detail.whatsapp[lang]}
@@ -195,17 +221,21 @@ export default function ProductDetailPage() {
                   <div style={{ background: '#F8F6F2', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', overflow: 'hidden', transition: 'transform 300ms, box-shadow 300ms' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 32px rgba(10,10,10,0.1)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                    <div style={{ height: '140px', background: '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="36" height="72" viewBox="0 0 36 72" fill="none">
-                        <rect x="8" y="18" width="20" height="48" rx="10" fill="#C9A96E" opacity="0.25"/>
-                        <rect x="9" y="19" width="18" height="46" rx="9" fill="#C9A96E" opacity="0.4"/>
-                        <rect x="12" y="8" width="12" height="12" rx="3" fill="#1C1C1C"/>
-                        <ellipse cx="18" cy="8" rx="7" ry="7" fill="#0A0A0A"/>
-                      </svg>
+                    <div style={{ height: '140px', background: '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.name_ar} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                      ) : (
+                        <svg width="36" height="72" viewBox="0 0 36 72" fill="none">
+                          <rect x="8" y="18" width="20" height="48" rx="10" fill="#C9A96E" opacity="0.25"/>
+                          <rect x="9" y="19" width="18" height="46" rx="9" fill="#C9A96E" opacity="0.4"/>
+                          <rect x="12" y="8" width="12" height="12" rx="3" fill="#1C1C1C"/>
+                          <ellipse cx="18" cy="8" rx="7" ry="7" fill="#0A0A0A"/>
+                        </svg>
+                      )}
                     </div>
                     <div style={{ padding: '12px 14px' }}>
                       <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '4px' }}>
-                        {lang === 'ar' ? p.name : p.nameEn}
+                        {lang === 'ar' ? p.name_ar : p.name_en}
                       </div>
                       <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '0.9375rem', fontWeight: 500, color: '#8A6F3E' }}>{p.price.toFixed(2)} JD</div>
                     </div>

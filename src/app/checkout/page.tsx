@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { useLang } from '@/lib/i18n/LangContext';
 import { t } from '@/lib/i18n/translations';
+import { createOrder, validatePromoCode } from '@/lib/supabase/queries';
+import type { PromoCode } from '@/lib/supabase/types';
 
 type PaymentMethod = 'card' | 'cod' | 'whatsapp' | 'instagram';
 
@@ -19,12 +21,6 @@ interface FormData {
 const citiesAr = ['عمّان', 'إربد', 'الزرقاء', 'العقبة', 'السلط', 'مادبا', 'الكرك', 'جرش', 'عجلون', 'المفرق', 'الطفيلة', 'معان'];
 const citiesEn = ['Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Salt', 'Madaba', 'Karak', 'Jerash', 'Ajloun', 'Mafraq', 'Tafilah', 'Maan'];
 
-const PROMO_CODES: Record<string, { discount: number; type: 'percent' | 'fixed'; labelAr: string; labelEn: string }> = {
-  'AK10':    { discount: 10, type: 'percent', labelAr: 'خصم ١٠٪',     labelEn: '10% Discount'   },
-  'WELCOME': { discount: 2,  type: 'fixed',   labelAr: 'خصم ٢ دينار', labelEn: '2 JD Discount'  },
-  'AK2025':  { discount: 15, type: 'percent', labelAr: 'خصم ١٥٪',     labelEn: '15% Discount'   },
-};
-
 export default function CheckoutPage() {
   const { lang, isRTL } = useLang();
   const { items, totalPrice, totalItems, clearCart } = useCartStore();
@@ -35,26 +31,30 @@ export default function CheckoutPage() {
   const [form, setForm]             = useState<FormData>({ name: '', phone: '', city: '', address: '', notes: '' });
   const [errors, setErrors]         = useState<Partial<FormData>>({});
   const [promoInput, setPromoInput] = useState('');
-  const [promoApplied, setPromoApplied] = useState<typeof PROMO_CODES[string] | null>(null);
+  const [promoApplied, setPromoApplied] = useState<PromoCode | null>(null);
   const [promoError, setPromoError]   = useState('');
   const [promoSuccess, setPromoSuccess] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   const cartItems = mounted ? items : [];
   const subtotal  = mounted ? totalPrice() : 0;
   const count     = mounted ? totalItems() : 0;
-  const discount  = promoApplied ? (promoApplied.type === 'percent' ? (subtotal * promoApplied.discount) / 100 : promoApplied.discount) : 0;
+  const discount  = promoApplied ? (promoApplied.discount_type === 'percent' ? (subtotal * promoApplied.discount_value) / 100 : promoApplied.discount_value) : 0;
   const total     = Math.max(0, subtotal - discount);
 
   const cities = lang === 'ar' ? citiesAr : citiesEn;
 
-  const applyPromo = () => {
+  const applyPromo = async () => {
     const code = promoInput.trim().toUpperCase();
     if (!code) { setPromoError(lang === 'ar' ? 'أدخل الكود أولاً' : 'Enter a code first'); return; }
-    if (PROMO_CODES[code]) {
-      setPromoApplied(PROMO_CODES[code]);
-      const label = lang === 'ar' ? PROMO_CODES[code].labelAr : PROMO_CODES[code].labelEn;
+    setPromoLoading(true);
+    const result = await validatePromoCode(code);
+    setPromoLoading(false);
+    if (result) {
+      setPromoApplied(result);
+      const label = lang === 'ar' ? result.label_ar : result.label_en;
       setPromoSuccess(`✓ ${label}`);
       setPromoError('');
     } else {
@@ -79,7 +79,29 @@ export default function CheckoutPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
+
+    // حفظ الطلب في قاعدة البيانات
+    const orderItems = cartItems.map(i => ({
+      id: String(i.id), name: i.name, nameEn: i.nameEn, price: i.price,
+      quantity: i.quantity, type: i.type, inspired: i.inspired,
+    }));
+
+    await createOrder({
+      customer_name: form.name,
+      customer_phone: form.phone,
+      city: form.city,
+      address: form.address,
+      notes: form.notes || null,
+      items: orderItems,
+      subtotal,
+      discount,
+      total,
+      promo_code: promoApplied ? promoInput.toUpperCase() : null,
+      payment_method: payment,
+      status: 'new',
+    });
+
+    // إرسال عبر واتساب أو إنستقرام إذا تم اختياره
     if (payment === 'whatsapp') {
       const promoLine = promoApplied ? `\n${lang === 'ar' ? 'كود الخصم' : 'Promo Code'}: ${promoInput.toUpperCase()}` : '';
       const msg = lang === 'ar'
@@ -89,6 +111,7 @@ export default function CheckoutPage() {
     } else if (payment === 'instagram') {
       window.open('https://instagram.com/akperfume', '_blank');
     }
+
     setLoading(false);
     setSubmitted(true);
     clearCart();
@@ -141,7 +164,6 @@ export default function CheckoutPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-            {/* Delivery */}
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.delivery[lang]}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -190,7 +212,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment */}
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.payment[lang]}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -209,7 +230,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div style={{ position: 'sticky', top: 'calc(var(--nav-h) + 2rem)' }}>
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.summary[lang]}</h2>
@@ -237,7 +257,6 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* Promo */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={labelStyle}>{t.checkout.promoLabel[lang]}</label>
                 {promoApplied ? (
@@ -250,8 +269,8 @@ export default function CheckoutPage() {
                     <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()} placeholder="AK10"
                       style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#0A0A0A', background: '#F8F6F2', border: `0.5px solid ${promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '9px 12px', flex: 1, outline: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                       onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
-                    <button onClick={applyPromo} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                      {t.checkout.promoApply[lang]}
+                    <button onClick={applyPromo} disabled={promoLoading} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: promoLoading ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
+                      {promoLoading ? '...' : t.checkout.promoApply[lang]}
                     </button>
                   </div>
                 )}
