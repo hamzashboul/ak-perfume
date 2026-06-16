@@ -1,27 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { useLang } from '@/lib/i18n/LangContext';
 import { t } from '@/lib/i18n/translations';
+import { getProducts } from '@/lib/supabase/queries';
+import type { Product } from '@/lib/supabase/types';
 
-const allProducts = [
-  { id: 1,  slug: 'oud-al-muluk',     name: 'عود الملوك',     nameEn: 'Oud Al Muluk',      type: 'oriental', typeLabel: 'Oriental · Woody',   price: 12.99, inspired: 'Inspired by Baccarat Rouge 540', badge: 'bestseller', ml: 50  },
-  { id: 2,  slug: 'zahr-al-yasmin',   name: 'زهر الياسمين',  nameEn: 'Zahr Al Yasmin',    type: 'floral',   typeLabel: 'Floral · Fresh',     price: 14.99, inspired: 'Inspired by La Vie Est Belle',   badge: 'new',        ml: 50  },
-  { id: 3,  slug: 'musk-al-layl',     name: 'مسك الليل',     nameEn: 'Musk Al Layl',      type: 'woody',    typeLabel: 'Woody · Amber',      price: 11.99, inspired: 'Inspired by Bleu de Chanel',    badge: '',           ml: 50  },
-  { id: 4,  slug: 'ghaith-al-sahra',  name: 'غيث الصحراء',   nameEn: 'Ghaith Al Sahra',   type: 'fresh',    typeLabel: 'Fresh · Citrus',     price: 13.99, inspired: 'Inspired by Aventus',            badge: '',           ml: 50  },
-  { id: 5,  slug: 'layla',            name: 'ليلى',           nameEn: 'Layla',             type: 'floral',   typeLabel: 'Floral · Oriental',  price: 15.99, inspired: 'Inspired by Black Opium',        badge: 'new',        ml: 100 },
-  { id: 6,  slug: 'amber-al-sharq',   name: 'أمبر الشرق',    nameEn: 'Amber Al Sharq',    type: 'oriental', typeLabel: 'Oriental · Amber',   price: 16.99, inspired: 'Inspired by Ambre Nuit',         badge: '',           ml: 100 },
-  { id: 7,  slug: 'sihr-al-bahr',     name: 'سحر البحر',     nameEn: 'Sihr Al Bahr',      type: 'fresh',    typeLabel: 'Fresh · Marine',     price: 10.99, inspired: 'Inspired by Acqua di Gio',       badge: '',           ml: 50  },
-  { id: 8,  slug: 'wardat-dimashq',   name: 'وردة دمشق',     nameEn: 'Wardat Dimashq',    type: 'floral',   typeLabel: 'Floral · Rose',      price: 17.99, inspired: 'Inspired by Miss Dior',          badge: 'bestseller', ml: 100 },
-  { id: 9,  slug: 'thelal-al-sandal', name: 'ظلال الصندل',   nameEn: 'Thelal Al Sandal',  type: 'woody',    typeLabel: 'Woody · Sandalwood', price: 13.99, inspired: 'Inspired by Tam Dao',            badge: '',           ml: 50  },
-  { id: 10, slug: 'nabdat-al-lemon',  name: 'نبضات الليمون', nameEn: 'Nabdat Al Lemon',   type: 'fresh',    typeLabel: 'Fresh · Citrus',     price: 9.99,  inspired: 'Inspired by Acqua di Parma',     badge: '',           ml: 50  },
-  { id: 11, slug: 'fajr-al-musk',     name: 'فجر المسك',     nameEn: 'Fajr Al Musk',      type: 'oriental', typeLabel: 'Oriental · Musk',    price: 14.99, inspired: 'Inspired by Musk Tahara',        badge: '',           ml: 100 },
-  { id: 12, slug: 'asrar-al-oud',     name: 'أسرار العود',   nameEn: 'Asrar Al Oud',      type: 'oriental', typeLabel: 'Oriental · Oud',     price: 19.99, inspired: 'Inspired by Oud Wood TF',        badge: 'premium',    ml: 100 },
-];
-
-function ProductCard({ p }: { p: typeof allProducts[0] }) {
+function ProductCard({ p }: { p: Product }) {
   const { lang } = useLang();
   const [hovered, setHovered] = useState(false);
   const [added, setAdded] = useState(false);
@@ -30,7 +17,14 @@ function ProductCard({ p }: { p: typeof allProducts[0] }) {
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({ id: p.id, name: p.name, nameEn: p.nameEn, price: p.price, type: p.typeLabel, inspired: p.inspired });
+    addItem({
+      id: p.id as unknown as number,
+      name: p.name_ar,
+      nameEn: p.name_en,
+      price: p.price,
+      type: p.type_label,
+      inspired: p.inspired || '',
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -47,15 +41,19 @@ function ProductCard({ p }: { p: typeof allProducts[0] }) {
       <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.08)', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', height: '100%', transform: hovered ? 'translateY(-6px)' : 'translateY(0)', boxShadow: hovered ? '0 16px 48px rgba(10,10,10,0.12), 0 0 0 0.5px rgba(201,169,110,0.25)' : '0 1px 4px rgba(10,10,10,0.05)', transition: 'transform 400ms cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 400ms cubic-bezier(0.25,0.46,0.45,0.94)' }}>
 
-        <div style={{ height: '200px', background: p.id % 2 === 0 ? '#F8F6F2' : '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          <svg width="48" height="96" viewBox="0 0 48 96" fill="none" style={{ transform: hovered ? 'scale(1.07) translateY(-4px)' : 'scale(1)', transition: 'transform 700ms cubic-bezier(0.25,0.46,0.45,0.94)', filter: 'drop-shadow(0 8px 16px rgba(10,10,10,0.1))' }}>
-            <rect x="11" y="24" width="26" height="62" rx="13" fill="#C9A96E" opacity="0.2"/>
-            <rect x="13" y="26" width="22" height="58" rx="11" fill="#C9A96E" opacity="0.4"/>
-            <rect x="17" y="10" width="14" height="16" rx="3" fill="#1C1C1C"/>
-            <ellipse cx="24" cy="10" rx="8" ry="8" fill="#0A0A0A"/>
-            <rect x="15" y="50" width="18" height="0.5" fill="#C9A96E" opacity="0.5"/>
-            <text x="24" y="68" textAnchor="middle" fill="#8A6F3E" fontSize="5" fontFamily="DM Sans" letterSpacing="2">AK</text>
-          </svg>
+        <div style={{ height: '200px', background: '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          {p.image_url ? (
+            <img src={p.image_url} alt={p.name_ar} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.05)' : 'scale(1)', transition: 'transform 700ms' }}/>
+          ) : (
+            <svg width="48" height="96" viewBox="0 0 48 96" fill="none" style={{ transform: hovered ? 'scale(1.07) translateY(-4px)' : 'scale(1)', transition: 'transform 700ms cubic-bezier(0.25,0.46,0.45,0.94)', filter: 'drop-shadow(0 8px 16px rgba(10,10,10,0.1))' }}>
+              <rect x="11" y="24" width="26" height="62" rx="13" fill="#C9A96E" opacity="0.2"/>
+              <rect x="13" y="26" width="22" height="58" rx="11" fill="#C9A96E" opacity="0.4"/>
+              <rect x="17" y="10" width="14" height="16" rx="3" fill="#1C1C1C"/>
+              <ellipse cx="24" cy="10" rx="8" ry="8" fill="#0A0A0A"/>
+              <rect x="15" y="50" width="18" height="0.5" fill="#C9A96E" opacity="0.5"/>
+              <text x="24" y="68" textAnchor="middle" fill="#8A6F3E" fontSize="5" fontFamily="DM Sans" letterSpacing="2">AK</text>
+            </svg>
+          )}
           {p.badge && (
             <div style={{ position: 'absolute', top: '10px', right: '10px', background: p.badge === 'bestseller' ? '#0A0A0A' : p.badge === 'premium' ? '#C9A96E' : 'rgba(201,169,110,0.12)', color: p.badge === 'bestseller' ? '#F8F6F2' : p.badge === 'premium' ? '#0A0A0A' : '#8A6F3E', border: p.badge === 'bestseller' || p.badge === 'premium' ? 'none' : '0.5px solid rgba(201,169,110,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '1px' }}>
               {getBadgeLabel()}
@@ -65,8 +63,8 @@ function ProductCard({ p }: { p: typeof allProducts[0] }) {
         </div>
 
         <div style={{ padding: '14px 16px 16px' }}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.3)', marginBottom: '4px' }}>{p.typeLabel}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, letterSpacing: '-0.01em', color: '#0A0A0A', lineHeight: 1.1, marginBottom: '3px' }}>{lang === 'ar' ? p.name : p.nameEn}</div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.3)', marginBottom: '4px' }}>{p.type_label}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, letterSpacing: '-0.01em', color: '#0A0A0A', lineHeight: 1.1, marginBottom: '3px' }}>{lang === 'ar' ? p.name_ar : p.name_en}</div>
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', color: 'rgba(10,10,10,0.28)', letterSpacing: '0.03em', marginBottom: '12px' }}>{p.inspired}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 500, color: '#8A6F3E' }}>{p.price.toFixed(2)} JD</span>
@@ -80,12 +78,34 @@ function ProductCard({ p }: { p: typeof allProducts[0] }) {
   );
 }
 
+function ProductSkeleton() {
+  return (
+    <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+      <div style={{ height: '200px', background: 'linear-gradient(90deg, #F0EDE8 25%, #F8F6F2 50%, #F0EDE8 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}/>
+      <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ height: '10px', width: '60%', background: '#F0EDE8', borderRadius: '2px' }}/>
+        <div style={{ height: '20px', width: '80%', background: '#F0EDE8', borderRadius: '2px' }}/>
+        <div style={{ height: '10px', width: '90%', background: '#F0EDE8', borderRadius: '2px' }}/>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductsPage() {
   const { lang, isRTL } = useLang();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('default');
   const [priceMax, setPriceMax] = useState(20);
+
+  useEffect(() => {
+    getProducts().then(data => {
+      setProducts(data);
+      setLoading(false);
+    });
+  }, []);
 
   const categories = [
     { id: 'all',      label: t.products.all[lang]      },
@@ -103,20 +123,23 @@ export default function ProductsPage() {
   ];
 
   const filtered = useMemo(() => {
-    let result = [...allProducts];
+    let result = [...products];
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(p => p.name.includes(q) || p.nameEn.toLowerCase().includes(q) || p.inspired.toLowerCase().includes(q) || p.typeLabel.toLowerCase().includes(q));
+      result = result.filter(p =>
+        p.name_ar.includes(q) || p.name_en.toLowerCase().includes(q) ||
+        (p.inspired || '').toLowerCase().includes(q) || p.type_label.toLowerCase().includes(q)
+      );
     }
     if (category !== 'all') result = result.filter(p => p.type === category);
     result = result.filter(p => p.price <= priceMax);
     switch (sort) {
       case 'price-asc':  result.sort((a, b) => a.price - b.price); break;
       case 'price-desc': result.sort((a, b) => b.price - a.price); break;
-      case 'name':       result.sort((a, b) => a.name.localeCompare(b.name, 'ar')); break;
+      case 'name':       result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, 'ar')); break;
     }
     return result;
-  }, [search, category, sort, priceMax]);
+  }, [products, search, category, sort, priceMax]);
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} style={{ background: '#F8F6F2', minHeight: '100vh' }}>
@@ -161,12 +184,16 @@ export default function ProductsPage() {
 
       <div className="site-container" style={{ paddingTop: '2rem', paddingBottom: '1rem' }}>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', color: 'rgba(10,10,10,0.4)' }}>
-          {filtered.length} {t.products.count[lang]}
+          {loading ? '...' : `${filtered.length} ${t.products.count[lang]}`}
         </p>
       </div>
 
       <div className="site-container" style={{ paddingBottom: 'clamp(4rem,8vw,6rem)' }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+            {Array(8).fill(null).map((_, i) => <ProductSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 0' }}>
             <div style={{ fontSize: '2rem', opacity: 0.2, marginBottom: '16px' }}>✦</div>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)' }}>{t.products.noResults[lang]}</p>
