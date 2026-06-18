@@ -266,7 +266,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()} placeholder="AK10"
+                    <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()} placeholder=" "
                       style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#0A0A0A', background: '#F8F6F2', border: `0.5px solid ${promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '9px 12px', flex: 1, outline: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                       onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                     <button onClick={applyPromo} disabled={promoLoading} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: promoLoading ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>

@@ -6,8 +6,6 @@ const supabase = createClient()
 // ─── Products ─────────────────────────────────────────────────────────────────
 
 export async function getProducts(): Promise<Product[]> {
-  
-
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -56,15 +54,13 @@ export async function getRelatedProducts(type: string, excludeId: string): Promi
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
-export async function createOrder(order: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at'>): Promise<Order | null> {
-  const { data, error } = await supabase
+export async function createOrder(order: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at'>): Promise<boolean> {
+  const { error } = await supabase
     .from('orders')
     .insert(order)
-    .select()
-    .single()
 
-  if (error) { console.error('createOrder error:', error); return null; }
-  return data
+  if (error) { console.error('createOrder error:', error); return false; }
+  return true
 }
 
 // ─── Promo Codes ──────────────────────────────────────────────────────────────
