@@ -6,7 +6,8 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
   const { data: product } = await supabase
     .from("products")
     .select("name_ar, name_en, desc_ar, desc_en, inspired")
