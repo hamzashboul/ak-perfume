@@ -17,10 +17,7 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
@@ -28,11 +25,10 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // تحقق إن الإيميل موجود في admin_users
     const { data: adminCheck } = await supabase
       .from('admin_users')
       .select('email')
-      .eq('email', data.user.email)
+      .eq('email', data.user.email ?? '')
       .single();
 
     if (!adminCheck) {
@@ -52,7 +48,6 @@ export default function AdminLoginPage() {
 
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.75rem', fontWeight: 400, letterSpacing: '0.1em', color: '#F8F6F2', marginBottom: '6px' }}>
             AK <span style={{ color: '#C9A96E' }}>✦</span> PERFUMES
@@ -62,7 +57,6 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleLogin} style={{ background: '#1C1C1C', border: '0.5px solid rgba(201,169,110,0.12)', borderRadius: '4px', padding: '2rem' }}>
 
           <div style={{ marginBottom: '20px' }}>
@@ -70,11 +64,7 @@ export default function AdminLoginPage() {
               البريد الإلكتروني
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              placeholder=" "
+              type="email" value={email} onChange={e => setEmail(e.target.value)} required
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#F8F6F2', background: '#0A0A0A', border: '0.5px solid rgba(201,169,110,0.15)', borderRadius: '2px', padding: '12px 16px', width: '100%', outline: 'none' }}
               onFocus={e => (e.target.style.borderColor = '#C9A96E')}
               onBlur={e => (e.target.style.borderColor = 'rgba(201,169,110,0.15)')}
@@ -86,11 +76,7 @@ export default function AdminLoginPage() {
               كلمة المرور
             </label>
             <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
+              type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.9375rem', color: '#F8F6F2', background: '#0A0A0A', border: '0.5px solid rgba(201,169,110,0.15)', borderRadius: '2px', padding: '12px 16px', width: '100%', outline: 'none' }}
               onFocus={e => (e.target.style.borderColor = '#C9A96E')}
               onBlur={e => (e.target.style.borderColor = 'rgba(201,169,110,0.15)')}
@@ -103,11 +89,8 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '14px', background: loading ? 'rgba(201,169,110,0.5)' : '#C9A96E', color: '#0A0A0A', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', border: 'none', borderRadius: '1px', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 250ms' }}
-          >
+          <button type="submit" disabled={loading}
+            style={{ width: '100%', padding: '14px', background: loading ? 'rgba(201,169,110,0.5)' : '#C9A96E', color: '#0A0A0A', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', border: 'none', borderRadius: '1px', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 250ms' }}>
             {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
