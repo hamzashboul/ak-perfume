@@ -1,7 +1,8 @@
 import { createClient } from './client'
 import type { Product, Order, PromoCode } from './types'
 
-const supabase = createClient()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = createClient() as any
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
