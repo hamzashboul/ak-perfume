@@ -31,14 +31,16 @@ function toDatetimeLocal(iso: string | null): string {
 export default function AdminPromosPage() {
   const router = useRouter();
   const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
 
-  const [loading, setLoading] = useState(true);
-  const [promos, setPromos] = useState<PromoCode[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [promos, setPromos]     = useState<PromoCode[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<PromoForm>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [form, setForm]         = useState<PromoForm>(emptyForm);
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -53,30 +55,19 @@ export default function AdminPromosPage() {
   }, []);
 
   const loadPromos = async () => {
-    const { data } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+    const { data } = await db.from('promo_codes').select('*').order('created_at', { ascending: false });
     setPromos(data || []);
   };
 
-  const openNewForm = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-    setShowForm(true);
-    setError('');
-  };
+  const openNewForm = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); setError(''); };
 
   const openEditForm = (p: PromoCode) => {
     setForm({
-      code: p.code,
-      discount_type: p.discount_type,
-      discount_value: String(p.discount_value),
-      label_ar: p.label_ar,
-      label_en: p.label_en,
-      active: p.active,
-      expires_at: toDatetimeLocal(p.expires_at), // يحتفظ بالتاريخ والوقت معاً
+      code: p.code, discount_type: p.discount_type, discount_value: String(p.discount_value),
+      label_ar: p.label_ar, label_en: p.label_en, active: p.active,
+      expires_at: toDatetimeLocal(p.expires_at),
     });
-    setEditingId(p.id);
-    setShowForm(true);
-    setError('');
+    setEditingId(p.id); setShowForm(true); setError('');
   };
 
   const handleSave = async () => {
@@ -98,44 +89,39 @@ export default function AdminPromosPage() {
     };
 
     if (editingId) {
-      const { error: updErr } = await supabase.from('promo_codes').update(payload).eq('id', editingId);
+      const { error: updErr } = await db.from('promo_codes').update(payload).eq('id', editingId);
       if (updErr) { setError('فشل التعديل: ' + updErr.message); setSaving(false); return; }
     } else {
-      const { error: insErr } = await supabase.from('promo_codes').insert(payload);
+      const { error: insErr } = await db.from('promo_codes').insert(payload);
       if (insErr) { setError('فشل الإضافة: ' + insErr.message); setSaving(false); return; }
     }
 
-    await loadPromos();
-    setSaving(false);
-    setShowForm(false);
+    await loadPromos(); setSaving(false); setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الكود؟')) return;
-    await supabase.from('promo_codes').delete().eq('id', id);
+    await db.from('promo_codes').delete().eq('id', id);
     await loadPromos();
   };
 
   const handleToggleActive = async (p: PromoCode) => {
-    await supabase.from('promo_codes').update({ active: !p.active }).eq('id', p.id);
+    await db.from('promo_codes').update({ active: !p.active }).eq('id', p.id);
     await loadPromos();
   };
 
   const labelStyle: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.45)', display: 'block', marginBottom: '6px' };
   const inputStyle: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#F8F6F2', background: '#0A0A0A', border: '0.5px solid rgba(201,169,110,0.15)', borderRadius: '2px', padding: '10px 12px', width: '100%', outline: 'none', colorScheme: 'dark' };
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'rgba(248,246,242,0.4)' }}>...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'rgba(248,246,242,0.4)' }}>...</p>
+    </div>
+  );
 
   return (
     <div dir="rtl" style={{ minHeight: '100vh', background: '#0A0A0A' }}>
 
-      {/* Header */}
       <div style={{ borderBottom: '0.5px solid rgba(201,169,110,0.12)', padding: '20px 0' }}>
         <div className="site-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -150,7 +136,7 @@ export default function AdminPromosPage() {
 
       <div className="site-container" style={{ paddingBlock: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-          {promos.map(p => (
+          {promos.map((p: PromoCode) => (
             <div key={p.id} style={{ background: '#1C1C1C', border: `0.5px solid ${p.active ? 'rgba(201,169,110,0.2)' : 'rgba(248,246,242,0.08)'}`, borderRadius: '4px', padding: '20px', opacity: p.active ? 1 : 0.5 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                 <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 500, color: '#C9A96E', letterSpacing: '0.05em' }}>{p.code}</div>
@@ -181,7 +167,6 @@ export default function AdminPromosPage() {
         )}
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowForm(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1C1C1C', border: '0.5px solid rgba(201,169,110,0.2)', borderRadius: '4px', padding: '28px', maxWidth: '420px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -194,7 +179,6 @@ export default function AdminPromosPage() {
                 <label style={labelStyle}>الكود *</label>
                 <input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} style={{ ...inputStyle, letterSpacing: '0.1em' }}/>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>نوع الخصم</label>
@@ -208,7 +192,6 @@ export default function AdminPromosPage() {
                   <input value={form.discount_value} onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))} type="number" step="0.01" style={inputStyle}/>
                 </div>
               </div>
-
               <div>
                 <label style={labelStyle}>الوصف بالعربي *</label>
                 <input value={form.label_ar} onChange={e => setForm(f => ({ ...f, label_ar: e.target.value }))} style={inputStyle}/>
@@ -217,22 +200,15 @@ export default function AdminPromosPage() {
                 <label style={labelStyle}>الوصف بالإنجليزي *</label>
                 <input value={form.label_en} onChange={e => setForm(f => ({ ...f, label_en: e.target.value }))} style={inputStyle}/>
               </div>
-
               <div>
                 <label style={labelStyle}>تاريخ ووقت الانتهاء (اختياري)</label>
-                <input
-                  value={form.expires_at}
-                  onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))}
-                  type="datetime-local"
-                  style={inputStyle}
-                />
+                <input value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} type="datetime-local" style={inputStyle}/>
                 {form.expires_at && (
                   <button type="button" onClick={() => setForm(f => ({ ...f, expires_at: '' }))} style={{ marginTop: '6px', fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', background: 'transparent', color: 'rgba(248,246,242,0.4)', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                     إزالة تاريخ الانتهاء
                   </button>
                 )}
               </div>
-
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#F8F6F2' }}>
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))}/>
                 الكود مفعّل
