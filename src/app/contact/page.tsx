@@ -46,8 +46,7 @@ export default function ContactPage() {
               {t.contact.title[lang]}
             </h1>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '1rem', fontWeight: 300, color: 'rgba(248,246,242,0.45)', lineHeight: 1.85 }}>
-              {t.contact.subtitle[lang]}
-            </p>
+{lang === 'ar' ? 'نحن هنا لمساعدتك — تواصل معنا عبر واتساب أو إنستقرام' : 'We are here to help — reach us via WhatsApp or Instagram'}            </p>
           </div>
         </div>
       </section>
