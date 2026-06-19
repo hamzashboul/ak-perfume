@@ -16,16 +16,13 @@ export default function AdminDashboard() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (!user) {
-        router.push('/admin/login');
-        return;
-      }
+      if (!user) { router.push('/admin/login'); return; }
 
-      // تحقق إنه أدمن
       const { data: adminCheck } = await supabase
         .from('admin_users')
         .select('email')
-        .eq('email', user.email ?? '').single();
+        .eq('email', user.email ?? '')
+        .single();
 
       if (!adminCheck) {
         await supabase.auth.signOut();
@@ -35,21 +32,21 @@ export default function AdminDashboard() {
 
       setUserEmail(user.email || '');
 
-      // جلب الإحصائيات
       const { count: productsCount } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true });
 
-      const { data: ordersData } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: ordersData } = await (supabase as any)
         .from('orders')
         .select('status, total');
 
-      const newOrders = ordersData?.filter(o => o.status === 'new').length || 0;
-      const revenue = ordersData?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
+      const newOrders = ordersData?.filter((o: { status: string }) => o.status === 'new').length || 0;
+      const revenue   = ordersData?.reduce((sum: number, o: { total: string }) => sum + Number(o.total), 0) || 0;
 
       setStats({
         products: productsCount || 0,
-        orders: ordersData?.length || 0,
+        orders:   ordersData?.length || 0,
         newOrders,
         revenue,
       });
@@ -75,10 +72,10 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: 'إجمالي المنتجات', value: stats.products, icon: '◈' },
-    { label: 'إجمالي الطلبات',  value: stats.orders,   icon: '✦' },
-    { label: 'طلبات جديدة',     value: stats.newOrders,icon: '●', highlight: stats.newOrders > 0 },
-    { label: 'إجمالي المبيعات', value: `${stats.revenue.toFixed(2)} JD`, icon: '◇' },
+    { label: 'إجمالي المنتجات', value: stats.products,                      icon: '◈' },
+    { label: 'إجمالي الطلبات',  value: stats.orders,                        icon: '✦' },
+    { label: 'طلبات جديدة',     value: stats.newOrders,                     icon: '●', highlight: stats.newOrders > 0 },
+    { label: 'إجمالي المبيعات', value: `${stats.revenue.toFixed(2)} JD`,    icon: '◇' },
   ];
 
   const menuItems = [
@@ -90,13 +87,10 @@ export default function AdminDashboard() {
   return (
     <div dir="rtl" style={{ minHeight: '100vh', background: '#0A0A0A' }}>
 
-      {/* Header */}
       <div style={{ borderBottom: '0.5px solid rgba(201,169,110,0.12)', padding: '20px 0' }}>
         <div className="site-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, color: '#F8F6F2' }}>
-              لوحة التحكم
-            </div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, color: '#F8F6F2' }}>لوحة التحكم</div>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', color: 'rgba(248,246,242,0.35)', marginTop: '2px' }}>{userEmail}</p>
           </div>
           <button onClick={handleLogout} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', background: 'transparent', color: 'rgba(248,246,242,0.5)', border: '0.5px solid rgba(248,246,242,0.15)', borderRadius: '2px', padding: '8px 16px', cursor: 'pointer' }}>
@@ -107,7 +101,6 @@ export default function AdminDashboard() {
 
       <div className="site-container" style={{ paddingBlock: '2.5rem' }}>
 
-        {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '2.5rem' }}>
           {statCards.map((s, i) => (
             <div key={i} style={{ background: '#1C1C1C', border: `0.5px solid ${s.highlight ? 'rgba(201,169,110,0.4)' : 'rgba(201,169,110,0.1)'}`, borderRadius: '4px', padding: '20px' }}>
@@ -118,7 +111,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Menu */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           {menuItems.map((item, i) => (
             <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
