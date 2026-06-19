@@ -7,23 +7,10 @@ import { createClient } from '@/lib/supabase/client';
 import type { Product } from '@/lib/supabase/types';
 
 type ProductForm = {
-  slug: string;
-  name_ar: string;
-  name_en: string;
-  desc_ar: string;
-  desc_en: string;
-  price: string;
-  type: string;
-  type_label: string;
-  inspired: string;
-  badge: string;
-  ml: string;
-  top_notes: string;
-  heart_notes: string;
-  base_notes: string;
-  image_url: string;
-  in_stock: boolean;
-  featured: boolean;
+  slug: string; name_ar: string; name_en: string; desc_ar: string; desc_en: string;
+  price: string; type: string; type_label: string; inspired: string; badge: string;
+  ml: string; top_notes: string; heart_notes: string; base_notes: string;
+  image_url: string; in_stock: boolean; featured: boolean;
 };
 
 const emptyForm: ProductForm = {
@@ -37,14 +24,14 @@ export default function AdminProductsPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductForm>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState('');
-  const [error, setError] = useState('');
+  const [form, setForm]         = useState<ProductForm>(emptyForm);
+  const [saving, setSaving]     = useState(false);
+  const [search, setSearch]     = useState('');
+  const [error, setError]       = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -63,12 +50,7 @@ export default function AdminProductsPage() {
     setProducts(data || []);
   };
 
-  const openNewForm = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-    setShowForm(true);
-    setError('');
-  };
+  const openNewForm = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); setError(''); };
 
   const openEditForm = (p: Product) => {
     setForm({
@@ -76,12 +58,12 @@ export default function AdminProductsPage() {
       desc_ar: p.desc_ar || '', desc_en: p.desc_en || '',
       price: String(p.price), type: p.type, type_label: p.type_label,
       inspired: p.inspired || '', badge: p.badge, ml: String(p.ml),
-      top_notes: p.top_notes?.join(', ') || '', heart_notes: p.heart_notes?.join(', ') || '', base_notes: p.base_notes?.join(', ') || '',
+      top_notes: p.top_notes?.join(', ') || '',
+      heart_notes: p.heart_notes?.join(', ') || '',
+      base_notes: p.base_notes?.join(', ') || '',
       image_url: p.image_url || '', in_stock: p.in_stock, featured: p.featured,
     });
-    setEditingId(p.id);
-    setShowForm(true);
-    setError('');
+    setEditingId(p.id); setShowForm(true); setError('');
   };
 
   const handleSave = async () => {
@@ -93,36 +75,29 @@ export default function AdminProductsPage() {
     setSaving(true);
 
     const payload = {
-      slug: form.slug.trim(),
-      name_ar: form.name_ar.trim(),
-      name_en: form.name_en.trim(),
-      desc_ar: form.desc_ar.trim() || null,
-      desc_en: form.desc_en.trim() || null,
-      price: parseFloat(form.price),
-      type: form.type,
+      slug: form.slug.trim(), name_ar: form.name_ar.trim(), name_en: form.name_en.trim(),
+      desc_ar: form.desc_ar.trim() || null, desc_en: form.desc_en.trim() || null,
+      price: parseFloat(form.price), type: form.type,
       type_label: form.type_label.trim() || form.type,
-      inspired: form.inspired.trim() || null,
-      badge: form.badge,
+      inspired: form.inspired.trim() || null, badge: form.badge,
       ml: parseInt(form.ml) || 50,
       top_notes: form.top_notes.split(',').map(s => s.trim()).filter(Boolean),
       heart_notes: form.heart_notes.split(',').map(s => s.trim()).filter(Boolean),
       base_notes: form.base_notes.split(',').map(s => s.trim()).filter(Boolean),
       image_url: form.image_url.trim() || null,
-      in_stock: form.in_stock,
-      featured: form.featured,
+      in_stock: form.in_stock, featured: form.featured,
     };
 
+    const db = supabase as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (editingId) {
-      const { error: updErr } = await supabase.from('products').update(payload).eq('id', editingId);
+      const { error: updErr } = await db.from('products').update(payload).eq('id', editingId);
       if (updErr) { setError('فشل التعديل: ' + updErr.message); setSaving(false); return; }
     } else {
-      const { error: insErr } = await supabase.from('products').insert(payload);
+      const { error: insErr } = await db.from('products').insert(payload);
       if (insErr) { setError('فشل الإضافة: ' + insErr.message); setSaving(false); return; }
     }
 
-    await loadProducts();
-    setSaving(false);
-    setShowForm(false);
+    await loadProducts(); setSaving(false); setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -132,7 +107,8 @@ export default function AdminProductsPage() {
   };
 
   const handleToggleStock = async (p: Product) => {
-    await supabase.from('products').update({ in_stock: !p.in_stock }).eq('id', p.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('products').update({ in_stock: !p.in_stock }).eq('id', p.id);
     await loadProducts();
   };
 
@@ -143,18 +119,14 @@ export default function AdminProductsPage() {
   const labelStyle: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.45)', display: 'block', marginBottom: '6px' };
   const inputStyle: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#F8F6F2', background: '#0A0A0A', border: '0.5px solid rgba(201,169,110,0.15)', borderRadius: '2px', padding: '10px 12px', width: '100%', outline: 'none' };
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'rgba(248,246,242,0.4)' }}>...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'rgba(248,246,242,0.4)' }}>...</p>
+    </div>
+  );
 
   return (
     <div dir="rtl" style={{ minHeight: '100vh', background: '#0A0A0A' }}>
-
-      {/* Header */}
       <div style={{ borderBottom: '0.5px solid rgba(201,169,110,0.12)', padding: '20px 0' }}>
         <div className="site-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -168,14 +140,9 @@ export default function AdminProductsPage() {
       </div>
 
       <div className="site-container" style={{ paddingBlock: '2rem' }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالاسم أو الرابط..."
+          style={{ ...inputStyle, maxWidth: '320px', marginBottom: '20px' }}/>
 
-        {/* Search */}
-        <input
-          value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالاسم أو الرابط..."
-          style={{ ...inputStyle, maxWidth: '320px', marginBottom: '20px' }}
-        />
-
-        {/* Table */}
         <div style={{ background: '#1C1C1C', border: '0.5px solid rgba(201,169,110,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -211,14 +178,11 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
           {filtered.length === 0 && (
-            <div style={{ padding: '40px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: 'rgba(248,246,242,0.3)' }}>
-              لا توجد منتجات
-            </div>
+            <div style={{ padding: '40px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: 'rgba(248,246,242,0.3)' }}>لا توجد منتجات</div>
           )}
         </div>
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setShowForm(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1C1C1C', border: '0.5px solid rgba(201,169,110,0.2)', borderRadius: '4px', padding: '28px', maxWidth: '600px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
@@ -227,86 +191,39 @@ export default function AdminProductsPage() {
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div>
-                <label style={labelStyle}>الرابط (slug) *</label>
-                <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="oud-al-muluk" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>السعر (JD) *</label>
-                <input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} type="number" step="0.01" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>الاسم بالعربي *</label>
-                <input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>الاسم بالإنجليزي *</label>
-                <input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} style={inputStyle}/>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>الوصف بالعربي</label>
-                <textarea value={form.desc_ar} onChange={e => setForm(f => ({ ...f, desc_ar: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'none' }}/>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>الوصف بالإنجليزي</label>
-                <textarea value={form.desc_en} onChange={e => setForm(f => ({ ...f, desc_en: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'none' }}/>
-              </div>
+              <div><label style={labelStyle}>الرابط (slug) *</label><input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="oud-al-muluk" style={inputStyle}/></div>
+              <div><label style={labelStyle}>السعر (JD) *</label><input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} type="number" step="0.01" style={inputStyle}/></div>
+              <div><label style={labelStyle}>الاسم بالعربي *</label><input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} style={inputStyle}/></div>
+              <div><label style={labelStyle}>الاسم بالإنجليزي *</label><input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} style={inputStyle}/></div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>الوصف بالعربي</label><textarea value={form.desc_ar} onChange={e => setForm(f => ({ ...f, desc_ar: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'none' }}/></div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>الوصف بالإنجليزي</label><textarea value={form.desc_en} onChange={e => setForm(f => ({ ...f, desc_en: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'none' }}/></div>
               <div>
                 <label style={labelStyle}>التصنيف</label>
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="oriental">شرقي</option>
-                  <option value="floral">زهري</option>
-                  <option value="woody">خشبي</option>
-                  <option value="fresh">منعش</option>
+                  <option value="oriental">شرقي</option><option value="floral">زهري</option><option value="woody">خشبي</option><option value="fresh">منعش</option>
                 </select>
               </div>
-              <div>
-                <label style={labelStyle}>وصف التصنيف</label>
-                <input value={form.type_label} onChange={e => setForm(f => ({ ...f, type_label: e.target.value }))} placeholder="Oriental · Woody" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>الحجم (ml)</label>
-                <input value={form.ml} onChange={e => setForm(f => ({ ...f, ml: e.target.value }))} type="number" style={inputStyle}/>
-              </div>
+              <div><label style={labelStyle}>وصف التصنيف</label><input value={form.type_label} onChange={e => setForm(f => ({ ...f, type_label: e.target.value }))} placeholder="Oriental · Woody" style={inputStyle}/></div>
+              <div><label style={labelStyle}>الحجم (ml)</label><input value={form.ml} onChange={e => setForm(f => ({ ...f, ml: e.target.value }))} type="number" style={inputStyle}/></div>
               <div>
                 <label style={labelStyle}>الشعار (badge)</label>
                 <select value={form.badge} onChange={e => setForm(f => ({ ...f, badge: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="">بدون</option>
-                  <option value="new">جديد</option>
-                  <option value="bestseller">الأكثر مبيعاً</option>
-                  <option value="premium">مميز</option>
+                  <option value="">بدون</option><option value="new">جديد</option><option value="bestseller">الأكثر مبيعاً</option><option value="premium">مميز</option>
                 </select>
               </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>مستوحى من</label>
-                <input value={form.inspired} onChange={e => setForm(f => ({ ...f, inspired: e.target.value }))} placeholder="Inspired by Baccarat Rouge 540" style={inputStyle}/>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>رابط الصورة</label>
-                <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>نوتات القمة (مفصولة بفاصلة)</label>
-                <input value={form.top_notes} onChange={e => setForm(f => ({ ...f, top_notes: e.target.value }))} placeholder="زعفران, برغموت" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>نوتات القلب</label>
-                <input value={form.heart_notes} onChange={e => setForm(f => ({ ...f, heart_notes: e.target.value }))} placeholder="عود, أرز" style={inputStyle}/>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>نوتات القاعدة</label>
-                <input value={form.base_notes} onChange={e => setForm(f => ({ ...f, base_notes: e.target.value }))} placeholder="مسك, أمبر" style={inputStyle}/>
-              </div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>مستوحى من</label><input value={form.inspired} onChange={e => setForm(f => ({ ...f, inspired: e.target.value }))} placeholder="Inspired by Baccarat Rouge 540" style={inputStyle}/></div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>رابط الصورة</label><input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." style={inputStyle}/></div>
+              <div><label style={labelStyle}>نوتات القمة (مفصولة بفاصلة)</label><input value={form.top_notes} onChange={e => setForm(f => ({ ...f, top_notes: e.target.value }))} placeholder="زعفران, برغموت" style={inputStyle}/></div>
+              <div><label style={labelStyle}>نوتات القلب</label><input value={form.heart_notes} onChange={e => setForm(f => ({ ...f, heart_notes: e.target.value }))} placeholder="عود, أرز" style={inputStyle}/></div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>نوتات القاعدة</label><input value={form.base_notes} onChange={e => setForm(f => ({ ...f, base_notes: e.target.value }))} placeholder="مسك, أمبر" style={inputStyle}/></div>
             </div>
 
             <div style={{ display: 'flex', gap: '20px', marginTop: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#F8F6F2' }}>
-                <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))}/>
-                متوفر في المخزون
+                <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))}/> متوفر في المخزون
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#F8F6F2' }}>
-                <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}/>
-                منتج مميز (يظهر بالرئيسية)
+                <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}/> منتج مميز (يظهر بالرئيسية)
               </label>
             </div>
 
