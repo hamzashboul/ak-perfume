@@ -25,8 +25,7 @@ export default function AdminDashboard() {
       const { data: adminCheck } = await supabase
         .from('admin_users')
         .select('email')
-        .eq('email', user.email)
-        .single();
+        .eq('email', user.email ?? '').single();
 
       if (!adminCheck) {
         await supabase.auth.signOut();

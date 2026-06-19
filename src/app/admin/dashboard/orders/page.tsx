@@ -26,7 +26,7 @@ export default function AdminOrdersPage() {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/admin/login'); return; }
-      const { data: adminCheck } = await supabase.from('admin_users').select('email').eq('email', user.email).single();
+      const { data: adminCheck } = await supabase.from('admin_users').select('email').eq('email', user.email ?? '').single();
       if (!adminCheck) { router.push('/admin/login'); return; }
       await loadOrders();
       setLoading(false);
