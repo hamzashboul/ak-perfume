@@ -7,26 +7,30 @@ import { createClient } from '@/lib/supabase/client';
 import type { Order } from '@/lib/supabase/types';
 
 const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
-  new:        { label: 'جديد',       color: '#63B3ED', bg: 'rgba(99,179,237,0.12)' },
-  processing: { label: 'قيد التوصيل', color: '#F6AD55', bg: 'rgba(246,173,85,0.12)' },
-  delivered:  { label: 'تم التسليم', color: '#48BB78', bg: 'rgba(72,187,120,0.12)' },
-  cancelled:  { label: 'ملغي',        color: '#FC8181', bg: 'rgba(252,129,129,0.12)' },
+  new:        { label: 'جديد',        color: '#63B3ED', bg: 'rgba(99,179,237,0.12)'   },
+  processing: { label: 'قيد التوصيل', color: '#F6AD55', bg: 'rgba(246,173,85,0.12)'  },
+  delivered:  { label: 'تم التسليم',  color: '#48BB78', bg: 'rgba(72,187,120,0.12)'  },
+  cancelled:  { label: 'ملغي',         color: '#FC8181', bg: 'rgba(252,129,129,0.12)' },
 };
 
 export default function AdminOrdersPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filter, setFilter] = useState<string>('all');
+  const [loading, setLoading]           = useState(true);
+  const [orders, setOrders]             = useState<Order[]>([]);
+  const [filter, setFilter]             = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/admin/login'); return; }
-      const { data: adminCheck } = await supabase.from('admin_users').select('email').eq('email', user.email ?? '').single();
+      const { data: adminCheck } = await supabase
+        .from('admin_users')
+        .select('email')
+        .eq('email', user.email ?? '')
+        .single();
       if (!adminCheck) { router.push('/admin/login'); return; }
       await loadOrders();
       setLoading(false);
@@ -35,12 +39,17 @@ export default function AdminOrdersPage() {
   }, []);
 
   const loadOrders = async () => {
-    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
     setOrders(data || []);
   };
 
   const updateStatus = async (orderId: string, newStatus: string) => {
-await supabase.from('orders').update({ status: newStatus } as any).eq('id', orderId);    await loadOrders();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('orders') as any).update({ status: newStatus }).eq('id', orderId);
+    await loadOrders();
     if (selectedOrder?.id === orderId) {
       setSelectedOrder(prev => prev ? { ...prev, status: newStatus as Order['status'] } : null);
     }
@@ -67,7 +76,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
   return (
     <div dir="rtl" style={{ minHeight: '100vh', background: '#0A0A0A' }}>
 
-      {/* Header */}
       <div style={{ borderBottom: '0.5px solid rgba(201,169,110,0.12)', padding: '20px 0' }}>
         <div className="site-container">
           <Link href="/admin/dashboard" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', color: '#C9A96E', textDecoration: 'none' }}>← لوحة التحكم</Link>
@@ -76,8 +84,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
       </div>
 
       <div className="site-container" style={{ paddingBlock: '2rem' }}>
-
-        {/* Filter tabs */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
           {filterTabs.map(tab => (
             <button key={tab.id} onClick={() => setFilter(tab.id)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.06em', background: filter === tab.id ? '#C9A96E' : 'transparent', color: filter === tab.id ? '#0A0A0A' : 'rgba(248,246,242,0.5)', border: '0.5px solid', borderColor: filter === tab.id ? '#C9A96E' : 'rgba(201,169,110,0.2)', borderRadius: '2px', padding: '8px 16px', cursor: 'pointer' }}>
@@ -86,7 +92,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
           ))}
         </div>
 
-        {/* Orders list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filtered.map(order => {
             const st = statusLabels[order.status] || statusLabels.new;
@@ -115,7 +120,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
         </div>
       </div>
 
-      {/* Order Detail Modal */}
       {selectedOrder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={() => setSelectedOrder(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1C1C1C', border: '0.5px solid rgba(201,169,110,0.2)', borderRadius: '4px', padding: '28px', maxWidth: '480px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
@@ -128,7 +132,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
               <button onClick={() => setSelectedOrder(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(248,246,242,0.5)', fontSize: '1.25rem', cursor: 'pointer' }}>✕</button>
             </div>
 
-            {/* Customer info */}
             <div style={{ background: '#0A0A0A', borderRadius: '3px', padding: '14px 16px', marginBottom: '16px' }}>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: '#F8F6F2', marginBottom: '4px' }}>{selectedOrder.customer_name}</div>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', color: 'rgba(248,246,242,0.5)' }}>{selectedOrder.customer_phone}</div>
@@ -136,7 +139,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
               {selectedOrder.notes && <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', color: 'rgba(248,246,242,0.4)', marginTop: '6px', fontStyle: 'italic' }}>"{selectedOrder.notes}"</div>}
             </div>
 
-            {/* Items */}
             <div style={{ marginBottom: '16px' }}>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.4)', marginBottom: '8px' }}>المنتجات</p>
               {selectedOrder.items?.map((item, i) => (
@@ -147,7 +149,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
               ))}
             </div>
 
-            {/* Totals */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px', paddingTop: '12px', borderTop: '0.5px solid rgba(201,169,110,0.1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', color: 'rgba(248,246,242,0.5)' }}>المجموع الفرعي</span>
@@ -165,7 +166,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
               </div>
             </div>
 
-            {/* Status update */}
             <div>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.4)', marginBottom: '10px' }}>تحديث حالة الطلب</p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -177,7 +177,6 @@ await supabase.from('orders').update({ status: newStatus } as any).eq('id', orde
               </div>
             </div>
 
-            {/* Contact buttons */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <a href={`https://wa.me/${selectedOrder.customer_phone.replace(/^0/, '962')}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', background: '#25D366', color: '#0A0A0A', borderRadius: '2px', padding: '12px', textDecoration: 'none' }}>
                 واتساب العميل
