@@ -40,8 +40,7 @@ export default function AdminOrdersPage() {
   };
 
   const updateStatus = async (orderId: string, newStatus: string) => {
-    await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-    await loadOrders();
+await supabase.from('orders').update({ status: newStatus } as any).eq('id', orderId);    await loadOrders();
     if (selectedOrder?.id === orderId) {
       setSelectedOrder(prev => prev ? { ...prev, status: newStatus as Order['status'] } : null);
     }
