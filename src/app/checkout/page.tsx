@@ -113,7 +113,7 @@ export default function CheckoutPage() {
       const msg = lang === 'ar'
         ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
         : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
-      window.open(`https://wa.me/962000000000?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://wa.me/962787304077?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (payment === 'instagram') {
       window.open('https://instagram.com/akperfume', '_blank');
     }
