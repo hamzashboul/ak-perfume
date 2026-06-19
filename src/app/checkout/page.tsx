@@ -21,6 +21,12 @@ interface FormData {
 const citiesAr = ['عمّان', 'إربد', 'الزرقاء', 'العقبة', 'السلط', 'مادبا', 'الكرك', 'جرش', 'عجلون', 'المفرق', 'الطفيلة', 'معان'];
 const citiesEn = ['Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Salt', 'Madaba', 'Karak', 'Jerash', 'Ajloun', 'Mafraq', 'Tafilah', 'Maan'];
 
+// رسوم التوصيل حسب المحافظة
+function getShippingFee(city: string): number {
+  const ammanCities = ['عمّان', 'Amman'];
+  return ammanCities.includes(city) ? 2 : city ? 3 : 0;
+}
+
 export default function CheckoutPage() {
   const { lang, isRTL } = useLang();
   const { items, totalPrice, totalItems, clearCart } = useCartStore();
@@ -38,11 +44,12 @@ export default function CheckoutPage() {
 
   useEffect(() => setMounted(true), []);
 
-  const cartItems = mounted ? items : [];
-  const subtotal  = mounted ? totalPrice() : 0;
-  const count     = mounted ? totalItems() : 0;
-  const discount  = promoApplied ? (promoApplied.discount_type === 'percent' ? (subtotal * promoApplied.discount_value) / 100 : promoApplied.discount_value) : 0;
-  const total     = Math.max(0, subtotal - discount);
+  const cartItems  = mounted ? items : [];
+  const subtotal   = mounted ? totalPrice() : 0;
+  const count      = mounted ? totalItems() : 0;
+  const shipping   = getShippingFee(form.city);
+  const discount   = promoApplied ? (promoApplied.discount_type === 'percent' ? (subtotal * promoApplied.discount_value) / 100 : promoApplied.discount_value) : 0;
+  const total      = Math.max(0, subtotal + shipping - discount);
 
   const cities = lang === 'ar' ? citiesAr : citiesEn;
 
@@ -80,7 +87,6 @@ export default function CheckoutPage() {
     if (!validate()) return;
     setLoading(true);
 
-    // حفظ الطلب في قاعدة البيانات
     const orderItems = cartItems.map(i => ({
       id: String(i.id), name: i.name, nameEn: i.nameEn, price: i.price,
       quantity: i.quantity, type: i.type, inspired: i.inspired,
@@ -101,12 +107,12 @@ export default function CheckoutPage() {
       status: 'new',
     });
 
-    // إرسال عبر واتساب أو إنستقرام إذا تم اختياره
     if (payment === 'whatsapp') {
       const promoLine = promoApplied ? `\n${lang === 'ar' ? 'كود الخصم' : 'Promo Code'}: ${promoInput.toUpperCase()}` : '';
+      const shippingLine = lang === 'ar' ? `\nرسوم التوصيل: ${shipping.toFixed(2)} JD` : `\nShipping: ${shipping.toFixed(2)} JD`;
       const msg = lang === 'ar'
-        ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
-        : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
+        ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
+        : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
       window.open(`https://wa.me/962000000000?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (payment === 'instagram') {
       window.open('https://instagram.com/akperfume', '_blank');
@@ -266,7 +272,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()} placeholder=" "
+                    <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }} onKeyDown={e => e.key === 'Enter' && applyPromo()}
                       style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: '#0A0A0A', background: '#F8F6F2', border: `0.5px solid ${promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)'}`, borderRadius: '2px', padding: '9px 12px', flex: 1, outline: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                       onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = promoError ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                     <button onClick={applyPromo} disabled={promoLoading} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#0A0A0A', color: '#F8F6F2', border: 'none', borderRadius: '2px', padding: '9px 16px', cursor: promoLoading ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>
@@ -295,8 +301,17 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>{t.checkout.shipping[lang]}</span>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: '#2D7D46', fontWeight: 500 }}>{t.checkout.free[lang]}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.45)' }}>
+                    {t.checkout.shipping[lang]}
+                    {form.city && (
+                      <span style={{ fontSize: '0.5625rem', color: 'rgba(10,10,10,0.35)', marginRight: '4px', marginLeft: '4px' }}>
+                        ({form.city})
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: shipping === 0 ? 'rgba(10,10,10,0.35)' : '#0A0A0A', fontWeight: 500 }}>
+                    {shipping === 0 ? (lang === 'ar' ? 'اختر المدينة' : 'Select city') : `${shipping.toFixed(2)} JD`}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '0.5px solid rgba(10,10,10,0.06)' }}>
                   <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 400, color: '#0A0A0A' }}>{t.checkout.grandTotal[lang]}</span>
