@@ -5,10 +5,9 @@ import { useLang } from '@/lib/i18n/LangContext';
 import { t } from '@/lib/i18n/translations';
 
 const milestones = [
-  { year: '2022', yearAr: '٢٠٢٢', eventAr: 'بداية الرحلة — أول زجاجة عطر من مطبخنا الصغير في عمّان',          eventEn: 'The beginning — our first perfume bottle from our small kitchen in Amman' },
-  { year: '2023', yearAr: '٢٠٢٣', eventAr: 'إطلاق المجموعة الأولى رسمياً على إنستقرام بـ ١٠ عطور',            eventEn: 'Official launch of our first collection on Instagram with 10 fragrances' },
-  { year: '2024', yearAr: '٢٠٢٤', eventAr: 'تجاوزنا ١٠٠٠ عميل سعيد في كل أنحاء الأردن',                       eventEn: 'Surpassed 1,000 happy customers across all of Jordan' },
-  { year: '2025', yearAr: '٢٠٢٥', eventAr: 'إطلاق الموقع الرسمي ومجموعة جديدة من ٥٠+ عطراً فاخراً',           eventEn: 'Launched our official website and a new collection of 50+ luxury fragrances' },
+  { year: '2022', yearAr: '٢٠٢٢', eventAr: 'بداية الرحلة — أول خطوة في عالم العطور، من فكرة صغيرة إلى علامة أردنية أصيلة', eventEn: 'The beginning — first steps into the world of fragrances, from a small idea to an authentic Jordanian brand' },
+  { year: '2024', yearAr: '٢٠٢٤', eventAr: 'تجاوزنا ١٠٠٠ عميل سعيد في كل أنحاء الأردن',                                    eventEn: 'Surpassed 1,000 happy customers across all of Jordan' },
+  { year: '2026', yearAr: '٢٠٢٦', eventAr: 'تطوير البراند وإطلاق المتجر الإلكتروني لنكون أقرب لعائلة AK',                   eventEn: 'Brand development and launching our online store to be closer to the AK family' },
 ];
 
 export default function AboutPage() {
