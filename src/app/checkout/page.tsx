@@ -157,7 +157,7 @@ export default function CheckoutPage() {
     { id: 'cod',       icon: '💵', title: t.checkout.codTitle[lang], desc: t.checkout.codDesc[lang]  },
     { id: 'card',      icon: '💳', title: t.checkout.cardTitle[lang],desc: t.checkout.cardDesc[lang] },
     { id: 'whatsapp',  icon: '💬', title: t.checkout.waTitle[lang],  desc: t.checkout.waDesc[lang]   },
-    { id: 'instagram', icon: '📷', title: t.checkout.igTitle[lang],  desc: t.checkout.igDesc[lang]   },
+   
   ] as { id: PaymentMethod; icon: string; title: string; desc: string }[];
 
   return (
