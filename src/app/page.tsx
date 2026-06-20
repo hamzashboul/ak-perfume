@@ -168,7 +168,7 @@ export default function HomePage() {
         <div style={{ display: 'flex', animation: 'ticker 24s linear infinite', whiteSpace: 'nowrap' }}>
           {Array(4).fill(null).map((_, i) => (
             <span key={i} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 400, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(201,169,110,0.35)', paddingInlineEnd: '3rem' }}>
-              AK PERFUMES ✦ DEFINE YOURSELF ✦ AUTHENTIC FRAGRANCES ✦ MADE IN JORDAN ✦ FREE DELIVERY ✦ PREMIUM QUALITY ✦ &nbsp;
+              AK PERFUMES ✦ DEFINE YOURSELF ✦ AUTHENTIC FRAGRANCES ✦ MADE IN JORDAN ✦ PREMIUM QUALITY ✦ &nbsp;
             </span>
           ))}
         </div>
@@ -275,7 +275,7 @@ export default function HomePage() {
               <Link href="/products" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: '#C9A96E', color: '#0A0A0A', padding: '13px 28px', borderRadius: '1px', textDecoration: 'none' }}>
                 {t.home.shopNow[lang]}
               </Link>
-              <a href="https://wa.me/962000000000" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: 'transparent', color: '#F8F6F2', padding: '12px 28px', borderRadius: '1px', border: '0.5px solid rgba(248,246,242,0.18)', textDecoration: 'none' }}>
+              <a href="https://wa.me/962787304077" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', background: 'transparent', color: '#F8F6F2', padding: '12px 28px', borderRadius: '1px', border: '0.5px solid rgba(248,246,242,0.18)', textDecoration: 'none' }}>
                 {t.home.whatsapp[lang]}
               </a>
             </div>

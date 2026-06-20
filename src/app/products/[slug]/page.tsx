@@ -200,7 +200,7 @@ export default function ProductDetailPage() {
             </button>
 
             {/* WhatsApp */}
-            <a href={`https://wa.me/962000000000?text=${encodeURIComponent(`${lang === 'ar' ? 'مرحبا، أريد طلب' : 'Hello, I want to order'}: ${lang === 'ar' ? product.name_ar : product.name_en} × ${qty} — ${(product.price * qty).toFixed(2)} JD`)}`}
+            <a href={`https://wa.me/962787304077?text=${encodeURIComponent(`${lang === 'ar' ? 'مرحبا، أريد طلب' : 'Hello, I want to order'}: ${lang === 'ar' ? product.name_ar : product.name_en} × ${qty} — ${(product.price * qty).toFixed(2)} JD`)}`}
               target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '13px', background: 'transparent', color: 'rgba(10,10,10,0.5)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', textDecoration: 'none', border: '0.5px solid rgba(10,10,10,0.15)', borderRadius: '1px' }}>
               {t.detail.whatsapp[lang]}

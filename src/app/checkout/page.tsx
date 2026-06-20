@@ -21,7 +21,6 @@ interface FormData {
 const citiesAr = ['عمّان', 'إربد', 'الزرقاء', 'العقبة', 'السلط', 'مادبا', 'الكرك', 'جرش', 'عجلون', 'المفرق', 'الطفيلة', 'معان'];
 const citiesEn = ['Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Salt', 'Madaba', 'Karak', 'Jerash', 'Ajloun', 'Mafraq', 'Tafilah', 'Maan'];
 
-// رسوم التوصيل حسب المحافظة
 function getShippingFee(city: string): number {
   const ammanCities = ['عمّان', 'Amman'];
   return ammanCities.includes(city) ? 2 : city ? 3 : 0;
@@ -44,12 +43,12 @@ export default function CheckoutPage() {
 
   useEffect(() => setMounted(true), []);
 
-  const cartItems  = mounted ? items : [];
-  const subtotal   = mounted ? totalPrice() : 0;
-  const count      = mounted ? totalItems() : 0;
-  const shipping   = getShippingFee(form.city);
-  const discount   = promoApplied ? (promoApplied.discount_type === 'percent' ? (subtotal * promoApplied.discount_value) / 100 : promoApplied.discount_value) : 0;
-  const total      = Math.max(0, subtotal + shipping - discount);
+  const cartItems = mounted ? items : [];
+  const subtotal  = mounted ? totalPrice() : 0;
+  const count     = mounted ? totalItems() : 0;
+  const shipping  = getShippingFee(form.city);
+  const discount  = promoApplied ? (promoApplied.discount_type === 'percent' ? (subtotal * promoApplied.discount_value) / 100 : promoApplied.discount_value) : 0;
+  const total     = Math.max(0, subtotal + shipping - discount);
 
   const cities = lang === 'ar' ? citiesAr : citiesEn;
 
@@ -83,6 +82,14 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0;
   };
 
+  const buildOrderMsg = (ar: boolean) => {
+    const promoLine = promoApplied ? `\n${ar ? 'كود الخصم' : 'Promo Code'}: ${promoInput.toUpperCase()}` : '';
+    const shippingLine = ar ? `\nرسوم التوصيل: ${shipping.toFixed(2)} JD` : `\nShipping: ${shipping.toFixed(2)} JD`;
+    return ar
+      ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
+      : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
@@ -107,15 +114,12 @@ export default function CheckoutPage() {
       status: 'new',
     });
 
+    const msg = buildOrderMsg(lang === 'ar');
+
     if (payment === 'whatsapp') {
-      const promoLine = promoApplied ? `\n${lang === 'ar' ? 'كود الخصم' : 'Promo Code'}: ${promoInput.toUpperCase()}` : '';
-      const shippingLine = lang === 'ar' ? `\nرسوم التوصيل: ${shipping.toFixed(2)} JD` : `\nShipping: ${shipping.toFixed(2)} JD`;
-      const msg = lang === 'ar'
-        ? `طلب جديد من AK Perfumes\n\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالمدينة: ${form.city}\nالعنوان: ${form.address}\n\nالطلب:\n${cartItems.map(i => `- ${i.name} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nالإجمالي: ${total.toFixed(2)} JD${form.notes ? `\nملاحظات: ${form.notes}` : ''}`
-        : `New order from AK Perfumes\n\nName: ${form.name}\nPhone: ${form.phone}\nCity: ${form.city}\nAddress: ${form.address}\n\nOrder:\n${cartItems.map(i => `- ${i.nameEn} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n')}${promoLine}${shippingLine}\n\nTotal: ${total.toFixed(2)} JD${form.notes ? `\nNotes: ${form.notes}` : ''}`;
       window.open(`https://wa.me/962787304077?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (payment === 'instagram') {
-      window.open('https://instagram.com/akperfume', '_blank');
+      window.open(`https://ig.me/m/ak.perfume1.jo?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     setLoading(false);
@@ -173,7 +177,6 @@ export default function CheckoutPage() {
             <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '24px' }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.375rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '20px' }}>{t.checkout.delivery[lang]}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>{t.checkout.name[lang]} *</label>
                   <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }} placeholder={t.checkout.namePh[lang]}
@@ -181,7 +184,6 @@ export default function CheckoutPage() {
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.name ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.name && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.name}</p>}
                 </div>
-
                 <div>
                   <label style={labelStyle}>{t.checkout.phone[lang]} *</label>
                   <input value={form.phone} onChange={e => { setForm(f => ({ ...f, phone: e.target.value })); setErrors(er => ({ ...er, phone: '' })); }} placeholder="07xxxxxxxx" type="tel"
@@ -189,7 +191,6 @@ export default function CheckoutPage() {
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.phone ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.phone && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.phone}</p>}
                 </div>
-
                 <div>
                   <label style={labelStyle}>{t.checkout.city[lang]} *</label>
                   <select value={form.city} onChange={e => { setForm(f => ({ ...f, city: e.target.value })); setErrors(er => ({ ...er, city: '' })); }}
@@ -200,7 +201,6 @@ export default function CheckoutPage() {
                   </select>
                   {errors.city && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.city}</p>}
                 </div>
-
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>{t.checkout.address[lang]} *</label>
                   <input value={form.address} onChange={e => { setForm(f => ({ ...f, address: e.target.value })); setErrors(er => ({ ...er, address: '' })); }} placeholder={t.checkout.addressPh[lang]}
@@ -208,7 +208,6 @@ export default function CheckoutPage() {
                     onFocus={e => (e.target.style.borderColor = '#C9A96E')} onBlur={e => (e.target.style.borderColor = errors.address ? '#E53E3E' : 'rgba(10,10,10,0.12)')}/>
                   {errors.address && <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', color: '#E53E3E', marginTop: '4px' }}>{errors.address}</p>}
                 </div>
-
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>{t.checkout.notes[lang]}</label>
                   <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder={t.checkout.notesPh[lang]} rows={3}

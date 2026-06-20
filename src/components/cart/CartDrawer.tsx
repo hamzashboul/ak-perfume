@@ -57,9 +57,9 @@ export default function CartDrawer() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '16px', paddingBottom: '4rem' }}>
               <div style={{ fontSize: '2rem', opacity: 0.2 }}>✦</div>
               <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 300, color: 'rgba(248,246,242,0.35)' }}>{t.cart.empty[lang]}</p>
-              <button onClick={closeCart} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', background: 'transparent', color: '#C9A96E', border: '0.5px solid rgba(201,169,110,0.3)', borderRadius: '1px', padding: '9px 20px', cursor: 'pointer', marginTop: '8px' }}>
+              <Link href="/products" onClick={closeCart} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', background: 'transparent', color: '#C9A96E', border: '0.5px solid rgba(201,169,110,0.3)', borderRadius: '1px', padding: '9px 20px', cursor: 'pointer', marginTop: '8px', textDecoration: 'none', display: 'inline-block' }}>
                 {t.cart.browse[lang]}
-              </button>
+              </Link>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -120,7 +120,7 @@ export default function CartDrawer() {
             <Link href="/checkout" onClick={closeCart} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '14px', background: '#C9A96E', color: '#0A0A0A', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', textDecoration: 'none', borderRadius: '1px', marginBottom: '10px' }}>
               {t.cart.checkout[lang]}
             </Link>
-            <a href={`https://wa.me/962000000000?text=${encodeURIComponent(waMsg)}`}
+            <a href={`https://wa.me/962787304077?text=${encodeURIComponent(waMsg)}`}
               target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '12px', background: 'transparent', color: 'rgba(248,246,242,0.55)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', textDecoration: 'none', border: '0.5px solid rgba(248,246,242,0.1)', borderRadius: '1px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(248,246,242,0.25)'; e.currentTarget.style.color = '#F8F6F2'; }}

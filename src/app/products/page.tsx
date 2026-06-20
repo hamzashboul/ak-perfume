@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { useLang } from '@/lib/i18n/LangContext';
 import { t } from '@/lib/i18n/translations';
@@ -29,6 +28,10 @@ function ProductCard({ p }: { p: Product }) {
     setTimeout(() => setAdded(false), 1500);
   };
 
+  const handleCardClick = () => {
+    window.location.href = `/products/${p.slug}`;
+  };
+
   const getBadgeLabel = () => {
     if (p.badge === 'bestseller') return t.products.bestseller[lang];
     if (p.badge === 'new') return t.products.new[lang];
@@ -37,44 +40,45 @@ function ProductCard({ p }: { p: Product }) {
   };
 
   return (
-    <Link href={`/products/${p.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
-      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-        style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.08)', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', height: '100%', transform: hovered ? 'translateY(-6px)' : 'translateY(0)', boxShadow: hovered ? '0 16px 48px rgba(10,10,10,0.12), 0 0 0 0.5px rgba(201,169,110,0.25)' : '0 1px 4px rgba(10,10,10,0.05)', transition: 'transform 400ms cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 400ms cubic-bezier(0.25,0.46,0.45,0.94)' }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={handleCardClick}
+      style={{ background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.08)', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer', height: '100%', transform: hovered ? 'translateY(-6px)' : 'translateY(0)', boxShadow: hovered ? '0 16px 48px rgba(10,10,10,0.12), 0 0 0 0.5px rgba(201,169,110,0.25)' : '0 1px 4px rgba(10,10,10,0.05)', transition: 'transform 400ms cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 400ms cubic-bezier(0.25,0.46,0.45,0.94)' }}>
 
-        <div style={{ height: '200px', background: '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          {p.image_url ? (
-            <img src={p.image_url} alt={p.name_ar} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.05)' : 'scale(1)', transition: 'transform 700ms' }}/>
-          ) : (
-            <svg width="48" height="96" viewBox="0 0 48 96" fill="none" style={{ transform: hovered ? 'scale(1.07) translateY(-4px)' : 'scale(1)', transition: 'transform 700ms cubic-bezier(0.25,0.46,0.45,0.94)', filter: 'drop-shadow(0 8px 16px rgba(10,10,10,0.1))' }}>
-              <rect x="11" y="24" width="26" height="62" rx="13" fill="#C9A96E" opacity="0.2"/>
-              <rect x="13" y="26" width="22" height="58" rx="11" fill="#C9A96E" opacity="0.4"/>
-              <rect x="17" y="10" width="14" height="16" rx="3" fill="#1C1C1C"/>
-              <ellipse cx="24" cy="10" rx="8" ry="8" fill="#0A0A0A"/>
-              <rect x="15" y="50" width="18" height="0.5" fill="#C9A96E" opacity="0.5"/>
-              <text x="24" y="68" textAnchor="middle" fill="#8A6F3E" fontSize="5" fontFamily="DM Sans" letterSpacing="2">AK</text>
-            </svg>
-          )}
-          {p.badge && (
-            <div style={{ position: 'absolute', top: '10px', right: '10px', background: p.badge === 'bestseller' ? '#0A0A0A' : p.badge === 'premium' ? '#C9A96E' : 'rgba(201,169,110,0.12)', color: p.badge === 'bestseller' ? '#F8F6F2' : p.badge === 'premium' ? '#0A0A0A' : '#8A6F3E', border: p.badge === 'bestseller' || p.badge === 'premium' ? 'none' : '0.5px solid rgba(201,169,110,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '1px' }}>
-              {getBadgeLabel()}
-            </div>
-          )}
-          <div style={{ position: 'absolute', bottom: '10px', left: '10px', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.3)' }}>{p.ml}ml</div>
-        </div>
-
-        <div style={{ padding: '14px 16px 16px' }}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.3)', marginBottom: '4px' }}>{p.type_label}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, letterSpacing: '-0.01em', color: '#0A0A0A', lineHeight: 1.1, marginBottom: '3px' }}>{lang === 'ar' ? p.name_ar : p.name_en}</div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', color: 'rgba(10,10,10,0.28)', letterSpacing: '0.03em', marginBottom: '12px' }}>{p.inspired}</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 500, color: '#8A6F3E' }}>{p.price.toFixed(2)} JD</span>
-            <button onClick={handleAdd} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: added ? '#C9A96E' : hovered ? '#0A0A0A' : 'transparent', color: added ? '#0A0A0A' : hovered ? '#F8F6F2' : '#0A0A0A', border: '0.5px solid rgba(10,10,10,0.15)', borderRadius: '1px', padding: '6px 12px', cursor: 'pointer', transition: 'all 250ms' }}>
-              {added ? `✓ ${t.products.added[lang]}` : t.products.addToCart[lang]}
-            </button>
+      <div style={{ height: '200px', background: '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        {p.image_url ? (
+          <img src={p.image_url} alt={p.name_ar} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.05)' : 'scale(1)', transition: 'transform 700ms' }}/>
+        ) : (
+          <svg width="48" height="96" viewBox="0 0 48 96" fill="none" style={{ transform: hovered ? 'scale(1.07) translateY(-4px)' : 'scale(1)', transition: 'transform 700ms cubic-bezier(0.25,0.46,0.45,0.94)', filter: 'drop-shadow(0 8px 16px rgba(10,10,10,0.1))' }}>
+            <rect x="11" y="24" width="26" height="62" rx="13" fill="#C9A96E" opacity="0.2"/>
+            <rect x="13" y="26" width="22" height="58" rx="11" fill="#C9A96E" opacity="0.4"/>
+            <rect x="17" y="10" width="14" height="16" rx="3" fill="#1C1C1C"/>
+            <ellipse cx="24" cy="10" rx="8" ry="8" fill="#0A0A0A"/>
+            <rect x="15" y="50" width="18" height="0.5" fill="#C9A96E" opacity="0.5"/>
+            <text x="24" y="68" textAnchor="middle" fill="#8A6F3E" fontSize="5" fontFamily="DM Sans" letterSpacing="2">AK</text>
+          </svg>
+        )}
+        {p.badge && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: p.badge === 'bestseller' ? '#0A0A0A' : p.badge === 'premium' ? '#C9A96E' : 'rgba(201,169,110,0.12)', color: p.badge === 'bestseller' ? '#F8F6F2' : p.badge === 'premium' ? '#0A0A0A' : '#8A6F3E', border: p.badge === 'bestseller' || p.badge === 'premium' ? 'none' : '0.5px solid rgba(201,169,110,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '1px' }}>
+            {getBadgeLabel()}
           </div>
+        )}
+        <div style={{ position: 'absolute', bottom: '10px', left: '10px', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.3)' }}>{p.ml}ml</div>
+      </div>
+
+      <div style={{ padding: '14px 16px 16px' }}>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.3)', marginBottom: '4px' }}>{p.type_label}</div>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, letterSpacing: '-0.01em', color: '#0A0A0A', lineHeight: 1.1, marginBottom: '3px' }}>{lang === 'ar' ? p.name_ar : p.name_en}</div>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', color: 'rgba(10,10,10,0.28)', letterSpacing: '0.03em', marginBottom: '12px' }}>{p.inspired}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.125rem', fontWeight: 500, color: '#8A6F3E' }}>{p.price.toFixed(2)} JD</span>
+          <button onClick={handleAdd} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: added ? '#C9A96E' : hovered ? '#0A0A0A' : 'transparent', color: added ? '#0A0A0A' : hovered ? '#F8F6F2' : '#0A0A0A', border: '0.5px solid rgba(10,10,10,0.15)', borderRadius: '1px', padding: '6px 12px', cursor: 'pointer', transition: 'all 250ms' }}>
+            {added ? `✓ ${t.products.added[lang]}` : t.products.addToCart[lang]}
+          </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

@@ -46,7 +46,8 @@ export default function ContactPage() {
               {t.contact.title[lang]}
             </h1>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '1rem', fontWeight: 300, color: 'rgba(248,246,242,0.45)', lineHeight: 1.85 }}>
-{lang === 'ar' ? 'نحن هنا لمساعدتك — تواصل معنا عبر واتساب أو إنستقرام' : 'We are here to help — reach us via WhatsApp or Instagram'}            </p>
+              {lang === 'ar' ? 'نحن هنا لمساعدتك — تواصل معنا عبر واتساب أو إنستقرام' : 'We are here to help — reach us via WhatsApp or Instagram'}
+            </p>
           </div>
         </div>
       </section>
@@ -74,36 +75,12 @@ export default function ContactPage() {
             ))}
           </div>
 
-          {/* Info */}
-          <div style={{ maxWidth: '720px', margin: '3rem auto 0', background: '#FFFFFF', border: '0.5px solid rgba(10,10,10,0.07)', borderRadius: '4px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25rem', fontWeight: 400, color: '#0A0A0A' }}>
-              {lang === 'ar' ? 'ساعات العمل' : 'Working Hours'}
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: 'rgba(10,10,10,0.5)' }}>
-                  {lang === 'ar' ? 'السبت — الخميس' : 'Saturday — Thursday'}
-                </span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: '#0A0A0A' }}>
-                  {lang === 'ar' ? '١٠ ص — ١٠ م' : '10 AM — 10 PM'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', color: 'rgba(10,10,10,0.5)' }}>
-                  {lang === 'ar' ? 'الجمعة' : 'Friday'}
-                </span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: '#0A0A0A' }}>
-                  {lang === 'ar' ? '٢ م — ١٠ م' : '2 PM — 10 PM'}
-                </span>
-              </div>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(10,10,10,0.07)', margin: '4px 0' }}/>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.8125rem', color: 'rgba(10,10,10,0.4)', lineHeight: 1.7 }}>
-              {lang === 'ar'
-                ? 'نسعى للرد على جميع الاستفسارات خلال ساعات العمل. للطلبات العاجلة يُفضّل التواصل عبر واتساب.'
-                : 'We aim to respond to all inquiries during working hours. For urgent orders, WhatsApp is preferred.'}
-            </p>
-          </div>
+          {/* Note */}
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem', fontWeight: 300, color: 'rgba(10,10,10,0.45)', textAlign: 'center', marginTop: '2.5rem', maxWidth: '480px', margin: '2.5rem auto 0', lineHeight: 1.75 }}>
+            {lang === 'ar'
+              ? 'نسعى لتقديم أفضل خدمة ممكنة والرد على جميع الاستفسارات بأسرع وقت ممكن.'
+              : 'We aim to provide the best service possible and respond to all inquiries as quickly as possible.'}
+          </p>
         </div>
       </section>
     </div>

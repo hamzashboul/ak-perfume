@@ -129,7 +129,7 @@ export default function Navbar() {
         </nav>
         <div style={{ marginTop: '3rem', display: 'flex', gap: '1.5rem', opacity: menuOpen ? 1 : 0, transition: 'opacity 500ms 280ms' }}>
           <a href="https://instagram.com/akperfume" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.35)' }}>Instagram</a>
-          <a href="https://wa.me/962000000000" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.35)' }}>WhatsApp</a>
+          <a href="https://wa.me/962787304077" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.35)' }}>WhatsApp</a>
         </div>
       </div>
 
