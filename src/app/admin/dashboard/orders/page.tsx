@@ -13,13 +13,25 @@ const statusLabels: Record<string, { label: string; color: string; bg: string }>
   cancelled:  { label: 'ملغي',         color: '#FC8181', bg: 'rgba(252,129,129,0.12)' },
 };
 
+function buildWhatsAppMsg(order: Order): string {
+  const items = order.items?.map(i => `- ${i.name} × ${i.quantity} = ${(i.price * i.quantity).toFixed(2)} JD`).join('\n') || '';
+  return `مرحباً ${order.customer_name}
+بخصوص طلبك من AK Perfumes:
+
+${items}
+الإجمالي: ${Number(order.total).toFixed(2)} JD
+
+سيتم التواصل معك عن طريق المندوب لتوصيل طلبك قريباً.
+شكراً لتسوقك معنا ✦`;
+}
+
 export default function AdminOrdersPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [loading, setLoading]           = useState(true);
-  const [orders, setOrders]             = useState<Order[]>([]);
-  const [filter, setFilter]             = useState<string>('all');
+  const [loading, setLoading]             = useState(true);
+  const [orders, setOrders]               = useState<Order[]>([]);
+  const [filter, setFilter]               = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
@@ -177,8 +189,12 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <a href={`https://wa.me/${selectedOrder.customer_phone.replace(/^0/, '962')}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', background: '#25D366', color: '#0A0A0A', borderRadius: '2px', padding: '12px', textDecoration: 'none' }}>
+            <div style={{ marginTop: '20px' }}>
+              <a
+                href={`https://wa.me/${selectedOrder.customer_phone.replace(/^0/, '962')}?text=${encodeURIComponent(buildWhatsAppMsg(selectedOrder))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'block', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', background: '#25D366', color: '#0A0A0A', borderRadius: '2px', padding: '12px', textDecoration: 'none' }}>
                 واتساب العميل
               </a>
             </div>
