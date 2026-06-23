@@ -15,7 +15,7 @@ type ProductForm = {
 
 const emptyForm: ProductForm = {
   slug: '', name_ar: '', name_en: '', desc_ar: '', desc_en: '',
-  price: '', type: 'oriental', type_label: '', inspired: '', badge: '',
+  price: '', type: 'men', type_label: '', inspired: '', badge: '',
   ml: '50', top_notes: '', heart_notes: '', base_notes: '',
   image_url: '', in_stock: true, featured: false,
 };
@@ -147,7 +147,7 @@ export default function AdminProductsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '0.5px solid rgba(201,169,110,0.12)' }}>
-                {['الاسم', 'النوع', 'السعر', 'الحالة', 'مميز', 'إجراءات'].map(h => (
+                {['الاسم', 'التصنيف', 'السعر', 'الحالة', 'مميز', 'إجراءات'].map(h => (
                   <th key={h} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(248,246,242,0.4)', padding: '14px 16px', textAlign: 'right' }}>{h}</th>
                 ))}
               </tr>
@@ -200,15 +200,20 @@ export default function AdminProductsPage() {
               <div>
                 <label style={labelStyle}>التصنيف</label>
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="oriental">شرقي</option><option value="floral">زهري</option><option value="woody">خشبي</option><option value="fresh">منعش</option>
+                  <option value="men">رجالي</option>
+                  <option value="women">نسائي</option>
+                  <option value="premium">AK Premium</option>
                 </select>
               </div>
-              <div><label style={labelStyle}>وصف التصنيف</label><input value={form.type_label} onChange={e => setForm(f => ({ ...f, type_label: e.target.value }))} placeholder="Oriental · Woody" style={inputStyle}/></div>
+              <div><label style={labelStyle}>وصف التصنيف</label><input value={form.type_label} onChange={e => setForm(f => ({ ...f, type_label: e.target.value }))} placeholder="مثال: رجالي · خشبي" style={inputStyle}/></div>
               <div><label style={labelStyle}>الحجم (ml)</label><input value={form.ml} onChange={e => setForm(f => ({ ...f, ml: e.target.value }))} type="number" style={inputStyle}/></div>
               <div>
                 <label style={labelStyle}>الشعار (badge)</label>
                 <select value={form.badge} onChange={e => setForm(f => ({ ...f, badge: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="">بدون</option><option value="new">جديد</option><option value="bestseller">الأكثر مبيعاً</option><option value="premium">مميز</option>
+                  <option value="">بدون</option>
+                  <option value="new">جديد</option>
+                  <option value="bestseller">الأكثر مبيعاً</option>
+                  <option value="akpremium">AK Premium</option>
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>مستوحى من</label><input value={form.inspired} onChange={e => setForm(f => ({ ...f, inspired: e.target.value }))} placeholder="Inspired by Baccarat Rouge 540" style={inputStyle}/></div>

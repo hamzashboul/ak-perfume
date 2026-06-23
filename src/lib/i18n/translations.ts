@@ -15,7 +15,7 @@ export const t = {
 
   // ── Home ────────────────────────────────────────────────────────────────────
   home: {
-    eyebrow:     { ar: 'مجموعة ٢٠٢٥ — عطور أصيلة',        en: '2025 Collection — Authentic Fragrances' },
+    eyebrow:     { ar: 'مجموعة ٢٠٢٦ — عطور أصيلة',        en: '2026 Collection — Authentic Fragrances' },
     heroTitle:   { ar: 'الرائحة التي',                      en: 'The Scent That'                         },
     heroAccent:  { ar: 'تعرّفك',                            en: 'Defines You'                            },
     heroSub:     { ar: 'روائح فاخرة مستوحاة من أشهر دور العطور العالمية — بجودة حقيقية وأسعار تناسب الجميع', en: "Luxury fragrances inspired by the world's finest perfume houses — genuine quality at honest prices" },
@@ -44,7 +44,7 @@ export const t = {
     ctaSub:      { ar: 'اكتشف عطرك المثالي اليوم',          en: 'Discover your perfect scent today'      },
     shopNow:     { ar: 'تسوق الآن',                         en: 'Shop Now'                               },
     whatsapp:    { ar: 'تواصل عبر واتساب',                  en: 'WhatsApp Us'                            },
-    footerCopy:  { ar: '© ٢٠٢٥ AK Perfumes — الأردن',       en: '© 2025 AK Perfumes — Jordan'            },
+    footerCopy:  { ar: '© ٢٠٢٦ AK Perfumes — الأردن',       en: '© 2026 AK Perfumes — Jordan'            },
   },
 
   // ── Products ─────────────────────────────────────────────────────────────────
@@ -52,11 +52,10 @@ export const t = {
     pageLabel:   { ar: 'كل العطور',         en: 'All Fragrances'   },
     pageTitle:   { ar: 'المجموعة الكاملة',  en: 'The Collection'   },
     searchPlaceholder: { ar: 'ابحث عن عطر...', en: 'Search fragrance...' },
-    all:         { ar: 'الكل',    en: 'All'      },
-    oriental:    { ar: 'شرقي',    en: 'Oriental' },
-    floral:      { ar: 'زهري',    en: 'Floral'   },
-    woody:       { ar: 'خشبي',    en: 'Woody'    },
-    fresh:       { ar: 'منعش',    en: 'Fresh'    },
+    all:         { ar: 'الكل',       en: 'All'        },
+    men:         { ar: 'رجالي',      en: 'Men'        },
+    women:       { ar: 'نسائي',      en: 'Women'      },
+    premium:     { ar: 'AK Premium', en: 'AK Premium' },
     sortDefault: { ar: 'الافتراضي',    en: 'Default'     },
     sortPriceLow:{ ar: 'السعر: الأقل', en: 'Price: Low'  },
     sortPriceHigh:{ ar: 'السعر: الأعلى', en: 'Price: High' },
@@ -69,7 +68,7 @@ export const t = {
     added:       { ar: 'أُضيف',        en: 'Added'           },
     new:         { ar: 'جديد',         en: 'New'             },
     bestseller:  { ar: 'الأكثر مبيعاً', en: 'Bestseller'     },
-    premium:     { ar: 'مميز',         en: 'Premium'         },
+    akpremium:   { ar: 'AK Premium',   en: 'AK Premium'      },
   },
 
   // ── Product Detail ────────────────────────────────────────────────────────────

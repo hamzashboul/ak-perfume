@@ -35,7 +35,7 @@ function ProductCard({ p }: { p: Product }) {
   const getBadgeLabel = () => {
     if (p.badge === 'bestseller') return t.products.bestseller[lang];
     if (p.badge === 'new') return t.products.new[lang];
-    if (p.badge === 'premium') return t.products.premium[lang];
+    if (p.badge === 'akpremium') return t.products.akpremium[lang];
     return '';
   };
 
@@ -60,7 +60,7 @@ function ProductCard({ p }: { p: Product }) {
           </svg>
         )}
         {p.badge && (
-          <div style={{ position: 'absolute', top: '10px', right: '10px', background: p.badge === 'bestseller' ? '#0A0A0A' : p.badge === 'premium' ? '#C9A96E' : 'rgba(201,169,110,0.12)', color: p.badge === 'bestseller' ? '#F8F6F2' : p.badge === 'premium' ? '#0A0A0A' : '#8A6F3E', border: p.badge === 'bestseller' || p.badge === 'premium' ? 'none' : '0.5px solid rgba(201,169,110,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '1px' }}>
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: p.badge === 'bestseller' ? '#0A0A0A' : p.badge === 'akpremium' ? '#C9A96E' : 'rgba(201,169,110,0.12)', color: p.badge === 'bestseller' ? '#F8F6F2' : p.badge === 'akpremium' ? '#0A0A0A' : '#8A6F3E', border: p.badge === 'bestseller' || p.badge === 'akpremium' ? 'none' : '0.5px solid rgba(201,169,110,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '1px' }}>
             {getBadgeLabel()}
           </div>
         )}
@@ -102,7 +102,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('default');
-  const [priceMax, setPriceMax] = useState(20);
+  const [priceMax, setPriceMax] = useState(200);
 
   useEffect(() => {
     getProducts().then(data => {
@@ -112,11 +112,10 @@ export default function ProductsPage() {
   }, []);
 
   const categories = [
-    { id: 'all',      label: t.products.all[lang]      },
-    { id: 'oriental', label: t.products.oriental[lang] },
-    { id: 'floral',   label: t.products.floral[lang]   },
-    { id: 'woody',    label: t.products.woody[lang]    },
-    { id: 'fresh',    label: t.products.fresh[lang]    },
+    { id: 'all',       label: t.products.all[lang]     },
+    { id: 'men',       label: t.products.men[lang]     },
+    { id: 'women',     label: t.products.women[lang]   },
+    { id: 'premium',   label: t.products.premium[lang] },
   ];
 
   const sortOptions = [
@@ -168,7 +167,8 @@ export default function ProductsPage() {
             </div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {categories.map(c => (
-                <button key={c.id} onClick={() => setCategory(c.id)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: category === c.id ? '#0A0A0A' : 'transparent', color: category === c.id ? '#F8F6F2' : 'rgba(10,10,10,0.5)', border: '0.5px solid', borderColor: category === c.id ? '#0A0A0A' : 'rgba(10,10,10,0.15)', borderRadius: '1px', padding: '7px 14px', cursor: 'pointer', transition: 'all 200ms' }}>
+                <button key={c.id} onClick={() => setCategory(c.id)}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', background: category === c.id ? '#0A0A0A' : 'transparent', color: category === c.id ? '#F8F6F2' : 'rgba(10,10,10,0.5)', border: '0.5px solid', borderColor: category === c.id ? '#0A0A0A' : 'rgba(10,10,10,0.15)', borderRadius: '1px', padding: '7px 14px', cursor: 'pointer', transition: 'all 200ms' }}>
                   {c.label}
                 </button>
               ))}
@@ -176,12 +176,6 @@ export default function ProductsPage() {
             <select value={sort} onChange={e => setSort(e.target.value)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, color: '#0A0A0A', background: '#F8F6F2', border: '0.5px solid rgba(10,10,10,0.12)', borderRadius: '2px', padding: '8px 12px', outline: 'none', cursor: 'pointer' }}>
               {sortOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.5625rem', fontWeight: 500, textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', whiteSpace: 'nowrap' }}>
-                {t.products.priceUp[lang]} {priceMax} JD
-              </span>
-              <input type="range" min={5} max={20} step={1} value={priceMax} onChange={e => setPriceMax(Number(e.target.value))} style={{ accentColor: '#C9A96E', width: '80px', cursor: 'pointer' }}/>
-            </div>
           </div>
         </div>
       </div>
@@ -201,7 +195,7 @@ export default function ProductsPage() {
           <div style={{ textAlign: 'center', padding: '4rem 0' }}>
             <div style={{ fontSize: '2rem', opacity: 0.2, marginBottom: '16px' }}>✦</div>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 300, color: 'rgba(10,10,10,0.4)' }}>{t.products.noResults[lang]}</p>
-            <button onClick={() => { setSearch(''); setCategory('all'); setPriceMax(20); }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '16px', background: 'transparent', color: '#C9A96E', border: '0.5px solid rgba(201,169,110,0.3)', borderRadius: '1px', padding: '8px 20px', cursor: 'pointer' }}>
+            <button onClick={() => { setSearch(''); setCategory('all'); }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.625rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '16px', background: 'transparent', color: '#C9A96E', border: '0.5px solid rgba(201,169,110,0.3)', borderRadius: '1px', padding: '8px 20px', cursor: 'pointer' }}>
               {t.products.reset[lang]}
             </button>
           </div>
